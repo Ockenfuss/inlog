@@ -1,0 +1,23 @@
+#Example log for data1: Only some numbers
+#now this gets longer
+#another line
+##############################################################
+##############################################################
+#2020-01-09 17:30:53.998959
+cd /home/p/Paul.Ockenfuss/Documents/CodeTemplates/MyPython/ExampleInput
+python3 Example.py Example.ini -s
+#Program: Example.py
+#Version: 1.2
+#Input options: Example.ini
+#**************************
+#---DEFAULT---
+#option1: Foo
+#option2: 1
+#option3: Foobar
+#data: Data1.dat
+#save: Data2.dat
+#numbers: [1 2 3]
+#**************************
+#Output files created:
+#%PATH% /home/p/Paul.Ockenfuss/Documents/CodeTemplates/MyPython/ExampleInput/Data2.dat
+#%HASH% 1f0de8217b259a5abc0e0566370e64f443f804ea8cc15fcb921a73edc1f1b204
