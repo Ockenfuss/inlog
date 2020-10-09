@@ -1,4 +1,4 @@
-from MyPython import Input as Inp
+from inlog import Input as Inp
 import argparse
 import numpy as np
 
