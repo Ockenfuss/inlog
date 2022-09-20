@@ -5,7 +5,7 @@ import os
 import __main__
 import datetime
 import hashlib
-VERSION="1.5.1"
+from pathlib import Path
 
 
 
@@ -29,7 +29,7 @@ class Input(object):
 
         Arguments:
             object {Input} -- the parser object\n
-            infilename {str} -- the file with the input options. Set to 'None' if not given.\n
+            infilename {str or Path or None} -- the file with the input options. Set to 'None' if not given.\n
             version {str} -- version of the program\n
 
         Keyword Arguments:
@@ -47,10 +47,11 @@ class Input(object):
             for key in def_opts[sec]:
                 # self.options[sec][key]=def_opts[sec][key]
                 self.config.set(sec, key, def_opts[sec][key])
-        if infilename is not None:
-            with open(infilename) as f:#Check for existence
+        if self.filename is not None:
+            self.filename=Path(self.filename)
+            with open(self.filename) as f:#Check for existence
                 pass
-            self.config.read(infilename)
+            self.config.read(self.filename)
         for sec in self.config:
             if not (sec in self.options):
                 self.options[sec]={}
@@ -157,7 +158,7 @@ class Input(object):
         """Calculate the hash of a file.
         
         Arguments:
-            file {str} -- The path of the file
+            file {str or Path} -- The path of the file
         
         Returns:
             str -- The hexadecimal sha256 hash of the file.
@@ -225,32 +226,32 @@ class Input(object):
         Combine all old logfiles, append the log of the actual program and save them to all new locations given.
 
         Arguments:
-            old_logs {arr} -- array with old logfiles
-            new_logs {arr} -- array with new logfiles to be created.
+            new_logs {str or Path or iterable of str, Path} -- New logfiles to be created.
+            old_logs {str or Path or iterable of str, Path} -- Old logfiles
 
         Keyword Arguments:
             file_ext {str} -- if set, the file extensions in the given logfile locations are replaced by 'file_ext' before the function is executed. (default: {None})
         """
         old_logs=np.atleast_1d(old_logs)
         new_logs=np.atleast_1d(new_logs)
+        old_logs=[Path(p) for p in old_logs]
+        new_logs=[Path(p) for p in new_logs]
         if file_ext!=None:
             file_ext=file_ext.strip(".")
-            old_logs=[os.path.splitext(logfile)[0]+"."+file_ext for logfile in old_logs]
-            new_logs=[os.path.splitext(logfile)[0]+"."+file_ext for logfile in new_logs]
+            old_logs=[logfile.stem / ("."+file_ext) for logfile in old_logs]
+            new_logs=[logfile.stem / ("."+file_ext) for logfile in new_logs]
 
         old_lines=[]
         log=self.create_log()
         for old in old_logs:
-            oldfile=open(old)
-            old_lines.extend(oldfile.readlines())
-            oldfile.close()
+            with open(old, "r") as oldfile:
+                old_lines.extend(oldfile.readlines())
         # old_lines=[l for l in old_lines]
         for new in new_logs:
-            newfile=open(new, "w")
-            newfile.writelines(old_lines)
-            newfile.write("#####################################################################################\n")
-            newfile.write(f"#####{os.path.basename(new)} in {os.path.dirname(new)}######\n")
-            newfile.writelines(log)
-            newfile.close()
+            with open(new, "w") as newfile:
+                newfile.writelines(old_lines)
+                newfile.write("#####################################################################################\n")
+                newfile.write(f"#####{new.name} in {new.parent}######\n")
+                newfile.writelines(log)
 
 
