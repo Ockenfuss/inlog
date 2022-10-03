@@ -142,17 +142,25 @@ class Input(object):
         self.set(array, option, section)
     
     def add_outfile(self, output_files):
-        """Add the name of the outputfiles of your program. They will be listed in the logfile, together with their hash value.
+        """Add the given filename(s) to the list of outputfiles of your program. They will be listed in the logfile, together with their hash value.
         
         Arguments:
-            output_files {string or list of strings} -- The paths of the outputfiles. Relative paths will be interpreted relative to the currend working directory.
+            output_files {string or list of strings} -- The paths of the outputfiles. Relative paths will be interpreted relative to the current working directory.
         """
         output_files=np.atleast_1d(output_files)
+        output_files=[Path(p).resolve() for p in output_files]
         for path in output_files:
-            abspath=os.path.abspath(path)
-            if not os.path.isfile(abspath):
-                print("WARNING: at the moment, there is no such file: "+abspath)
-            self.outfilename.append(abspath)
+            if not path.exists():
+                print("WARNING: at the moment, there is no such file: "+path)
+            self.outfilename.append(path)
+    def set_outfile(self, output_files):
+        """Set the given filename(s) as the list of outputfiles of your program. They will be listed in the logfile, together with their hash value.
+        
+        Arguments:
+            output_files {string or list of strings} -- The paths of the outputfiles. Relative paths will be interpreted relative to the current working directory.
+        """
+        self.outfilename=[]
+        self.add_outfile(output_files)
 
     def hash_file(self, file):
         """Calculate the hash of a file.
@@ -204,7 +212,7 @@ class Input(object):
             log.append("#**************************")
             log.append("#Output files created:")
             for path in self.outfilename:
-                log.append("#%PATH% "+path)
+                log.append("#%PATH% "+str(path))
                 log.append("#%HASH% "+self.hash_file(path))
         log=[l+"\n" for l in log]
         return log
@@ -238,8 +246,8 @@ class Input(object):
         new_logs=[Path(p) for p in new_logs]
         if file_ext!=None:
             file_ext=file_ext.strip(".")
-            old_logs=[logfile.stem / ("."+file_ext) for logfile in old_logs]
-            new_logs=[logfile.stem / ("."+file_ext) for logfile in new_logs]
+            old_logs=[logfile.with_suffix("."+file_ext) for logfile in old_logs]
+            new_logs=[logfile.with_suffix("."+file_ext) for logfile in new_logs]
 
         old_lines=[]
         log=self.create_log()
