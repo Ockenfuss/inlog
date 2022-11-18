@@ -1,13 +1,14 @@
 #Example log for data1: Only some numbers
 #now this gets longer
-#another line#####################################################################################
-#####Data2.log in ######
-#2020-10-09 11:48:51.802856
-cd /home/paul/Git/inlog/examples
-python3 Example.py Example.ini -s
-#Program: Example.py
-#Version: 1.2
-#Input options: Example.ini
+#another line
+# <Logfile> Data1.log
+#=========================================
+cd /project/meteo/work/Paul.Ockenfuss/Git/inlog/examples
+python3 Example.py -s Example.ini
+# <Date> 2022-11-18 19:33:13.695169
+# <Program> /project/meteo/work/Paul.Ockenfuss/Git/inlog/examples/Example.py
+# <Version> 1.2
+# <Input> Example.ini
 #**************************
 #---DEFAULT---
 #option1: Foo
@@ -18,5 +19,5 @@ python3 Example.py Example.ini -s
 #numbers: [1 2 3]
 #**************************
 #Output files created:
-#%PATH% /home/paul/Git/inlog/examples/Data2.dat
-#%HASH% 1f0de8217b259a5abc0e0566370e64f443f804ea8cc15fcb921a73edc1f1b204
+# <PATH> /project/meteo/work/Paul.Ockenfuss/Git/inlog/examples/Data2.dat
+# <HASH> 1f0de8217b259a5abc0e0566370e64f443f804ea8cc15fcb921a73edc1f1b204

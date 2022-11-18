@@ -5,6 +5,7 @@ import os
 import __main__
 import datetime
 import hashlib
+import warnings
 from pathlib import Path
 
 
@@ -151,7 +152,7 @@ class Input(object):
         output_files=[Path(p).resolve() for p in output_files]
         for path in output_files:
             if not path.exists():
-                print("WARNING: at the moment, there is no such file: "+path)
+                warnings.warn(f"At the moment, there is no such file: {path}")
             self.outfilename.append(path)
     def set_outfile(self, output_files):
         """Set the given filename(s) as the list of outputfiles of your program. They will be listed in the logfile, together with their hash value.
@@ -197,12 +198,12 @@ class Input(object):
             array -- array with lines including linebreak.
         """
         log=[]
-        log.append("#"+str(datetime.datetime.now()))
         log.append("cd "+os.getcwd())
         log.append("python3 "+" ".join(sys.argv))
-        log.append("#Program: "+__main__.__file__)
-        log.append("#Version: "+str(self.version))
-        log.append("#Input options: "+str(self.filename))
+        log.append("# <Date> "+str(datetime.datetime.now()))
+        log.append("# <Program> "+__main__.__file__)
+        log.append("# <Version> "+str(self.version))
+        log.append("# <Input> "+str(self.filename))
         log.append("#**************************")
         for sec in self.options.keys():
             log.append("#---"+str(sec)+"---")
@@ -212,8 +213,8 @@ class Input(object):
             log.append("#**************************")
             log.append("#Output files created:")
             for path in self.outfilename:
-                log.append("#%PATH% "+str(path))
-                log.append("#%HASH% "+self.hash_file(path))
+                log.append("# <PATH> "+str(path))
+                log.append("# <HASH> "+self.hash_file(path))
         log=[l+"\n" for l in log]
         return log
 
@@ -254,12 +255,12 @@ class Input(object):
         for old in old_logs:
             with open(old, "r") as oldfile:
                 old_lines.extend(oldfile.readlines())
-        # old_lines=[l for l in old_lines]
+                old_lines[-1]=old_lines[-1].strip("\n")+"\n"
+                old_lines.extend(f"# <Logfile> {old}\n") #This has to happen at the old logs! This way, even manually created logfiles get the path appended.
+                old_lines.extend("#=========================================\n")
         for new in new_logs:
             with open(new, "w") as newfile:
                 newfile.writelines(old_lines)
-                newfile.write("#####################################################################################\n")
-                newfile.write(f"#####{new.name} in {new.parent}######\n")
                 newfile.writelines(log)
 
 
