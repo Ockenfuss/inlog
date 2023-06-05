@@ -110,15 +110,18 @@ class Input(object):
         """Convert an input option from string to a given type.
 
         Arguments:
-            dtype {type} -- Either int, float, or bool.
+            dtype {func} -- Type convertion function. Typical are int, float or Path. bool is also allowed.
 
         Keyword Arguments:
             option {string} -- The option to be converted. (default: {None})
             section {string} -- The section where the option is located (default: {None})
         """
         option, section=self.getKey(option, section)
-        myDict={int: lambda sec, opt: int(self.get(opt, sec)), float: lambda sec, opt: float(self.get(opt, sec)), bool: lambda sec, opt: self.get(opt, sec).lower() in ("true", "yes", "1", "t")}
-        self.set(myDict.get(dtype)(section, option),option=option, section=section)
+        if dtype==bool:
+            conversion_func=lambda val: val.lower() in ("true", "yes", "1", "t")
+        else:
+            conversion_func=dtype
+        self.set(conversion_func(self.get(option, section)),option=option, section=section)
 
     def convert_array(self, dtype, option=None, section=None, sep=",", removeSpaces=False):
         """Convert an input option from string to an array of the given type.

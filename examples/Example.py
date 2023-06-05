@@ -1,11 +1,12 @@
 from inlog import Input as Inp
 import argparse
 import numpy as np
+from pathlib import Path
 
 #########################################################################
 #An Example program on how to use the input logger. Call this program as "python3 Example.py Example.ini -s"
 #########################################################################
-VERSION="1.2"
+VERSION="1.3"
 par=argparse.ArgumentParser()
 par.add_argument('infile')
 par.add_argument('-s',action='store_true')
@@ -13,6 +14,7 @@ args=par.parse_args()
 print(args.infile)
 inp=Inp.Input(args.infile,version=VERSION)
 inp.convert_type(int, "option2")
+inp.convert_type(Path, "data")
 inp.convert_array(int, "numbers", removeSpaces=True)
 inp.show_data()
 

@@ -5,9 +5,9 @@
 #=========================================
 cd /project/meteo/work/Paul.Ockenfuss/Git/inlog/examples
 python3 Example.py -s Example.ini
-# <Date> 2022-11-18 19:33:13.695169
+# <Date> 2023-05-17 14:32:35.289991
 # <Program> /project/meteo/work/Paul.Ockenfuss/Git/inlog/examples/Example.py
-# <Version> 1.2
+# <Version> 1.3
 # <Input> Example.ini
 #**************************
 #---DEFAULT---

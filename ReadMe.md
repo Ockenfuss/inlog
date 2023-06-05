@@ -33,3 +33,6 @@ inp.get("option2")
 inp.add_outfile('outputfile.dat')
 inp.write_log('outputfile.dat', ['inputfile.dat'], file_ext="log")
 ```
+
+## Roadmap
+* JSON or another input format. Ideally with implicit type information, such that `convert_type` is not necessary anymore
