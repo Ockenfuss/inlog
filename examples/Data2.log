@@ -1,23 +1,35 @@
-#Example log for data1: Only some numbers
-#now this gets longer
-#another line
-# <Logfile> Data1.log
-#=========================================
-cd /project/meteo/work/Paul.Ockenfuss/Git/inlog/examples
-python3 Example.py -s Example.ini
-# <Date> 2023-05-17 14:32:35.289991
-# <Program> /project/meteo/work/Paul.Ockenfuss/Git/inlog/examples/Example.py
-# <Version> 1.3
-# <Input> Example.ini
-#**************************
-#---DEFAULT---
-#option1: Foo
-#option2: 1
-#option3: Foobar
-#data: Data1.dat
-#save: Data2.dat
-#numbers: [1 2 3]
-#**************************
-#Output files created:
-# <PATH> /project/meteo/work/Paul.Ockenfuss/Git/inlog/examples/Data2.dat
-# <HASH> 1f0de8217b259a5abc0e0566370e64f443f804ea8cc15fcb921a73edc1f1b204
+{
+    "date": "2023-06-29 17:39:08.072160",
+    "program": "/project/meteo/work/Paul.Ockenfuss/Git/inlog/examples/Example.py",
+    "version": "2.0",
+    "input": "Example.ini",
+    "runtime": "0:00:00.034711",
+    "options": {
+        "standard": {
+            "data": "Data1.dat",
+            "intermediate": "Data2.dat"
+        },
+        "special": {
+            "numbers": [
+                1,
+                2,
+                3
+            ]
+        }
+    },
+    "output_files": [
+        {
+            "path": "/project/meteo/work/Paul.Ockenfuss/Git/inlog/examples/Data2.dat",
+            "hash": "0350072edb32360b241d9d87e6fa6bb02d4d6e377cd0fe6c6ecce7a9c0c382fa"
+        }
+    ],
+    "dependencies": {
+        "/project/meteo/work/Paul.Ockenfuss/Git/inlog/examples/Data1.log": {
+            "text": [
+                "#Example log for data1: Only some numbers\n",
+                "#now this gets longer\n",
+                "#another line"
+            ]
+        }
+    }
+}
