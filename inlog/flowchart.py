@@ -3,6 +3,7 @@ import sys
 import json
 from pathlib import Path
 import hashlib
+import argparse
 
 MERMAID_CODE=[]
 
@@ -32,8 +33,12 @@ def make_nodes(jlog, filename):
             progamname=Path(jlog["program"]).name
             MERMAID_CODE.append(f"    id_{dep_hash} --> |{progamname}| id_{self_hash}")
 
+parser = argparse.ArgumentParser(description='Generate mermaid flowchart from jlog')
+parser.add_argument('jlog', type=str, help='log file in json format')
+args = parser.parse_args()
+
 jlog={}
-with open(sys.argv[1], 'r') as f:
+with open(args.jlog, 'r') as f:
     jlog.update(json.load(f))
 
 MERMAID_CODE.append("flowchart TD")
