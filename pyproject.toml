@@ -1,0 +1,32 @@
+[build-system]
+requires      = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "inlog"
+version = "1.0.0"
+description = "Reading config files and creating logs from them."
+readme = "README.md"
+authors = [{ name = "Paul Ockenfuß", email = "paul.ockenfuss@physik.uni-muenchen.de" }]
+license = { file = "LICENSE" }
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Intended Audience :: Science/Research",
+    "Topic :: Software Development :: Version Control",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: System :: Logging",
+]
+keywords = ["config", "ini", "log", "yaml"]
+dependencies = [
+]
+requires-python = ">=3.8"
+
+[project.optional-dependencies]
+extra = ["pyyaml"]
+
+[project.urls]
+Homepage = "https://github.com/Ockenfuss/inlog"
+
+[project.scripts]
+inlog-flowchart = "inlog.flowchart:main"

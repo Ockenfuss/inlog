@@ -1,4 +1,3 @@
-import numpy as np
 import sys
 import configparser
 import os
@@ -8,30 +7,13 @@ import hashlib
 import warnings
 from pathlib import Path
 import json
-from inlog.conversion import config_to_dict
 import json
-from collections import defaultdict
 
-STANDARD_SECTION="standard"
+class Logger(object):
+    """Parser to read inputfiles and create logs."""
 
-
-class Input(object):
-    """Parser to read inputfiles and create logs.
-
-    Example usage:\n
-    import argparse
-    VERSION="1.1"
-    par=argparse.ArgumentParser()
-    par.add_argument('infile')
-    par.add_argument('number', type=int)
-    par.add_argument('-s',action='store_true')
-    args=par.parse_args()
-    inp=Inp.Input(args.infile,version=VERSION)
-    inp.convert_type(int, "option2")
-    """
-
-    def __init__(self,infilename, version, def_opts={}):
-        """Create Input parser.
+    def __init__(self, config_dict, version, def_opts={}):
+        """Create Logger for config parsing and logging.
 
         Arguments:
             object {Input} -- the parser object\n
@@ -41,116 +23,166 @@ class Input(object):
         Keyword Arguments:
             def_opts {dict} -- dictionary with default input options and values. (default: {{}})
         """
-        self.filename=infilename
+        self.filename=None
         self.version=version
         self.creation_date=datetime.datetime.now()
-        self.config = configparser.ConfigParser()
-        self.config._interpolation = configparser.ExtendedInterpolation()
-        self.outfilename=[]
-        for sec in def_opts:
-            # self.options[sec]={}
-            self.config.add_section(sec)
-            for key in def_opts[sec]:
-                # self.options[sec][key]=def_opts[sec][key]
-                self.config.set(sec, key, def_opts[sec][key])
-        if self.filename is not None:
-            self.filename=Path(self.filename)
-            with open(self.filename) as f:#Check for existence
-                pass
-            self.config.read(self.filename)
-        self.options=config_to_dict(self.config)
-        self.accessed=defaultdict(lambda: defaultdict(bool))
-
-    def _getKey(self, option, section):
-        """Possibility to transform requests for keys"""
-        # if option==None:
-        #     option=list(self.options[section].keys())[0]#possibility to specify standard option
-        # option=option.lower()
-        return option, section
-
-    def listKeys(self, section):
-        """Return all keys in a given section
+        self.outfilenames=[]
         
-        Arguments:
-            section {key} -- The key of the section
-        
-        Returns:
-            dict_keys -- The keys available within the section.
-        """
-        if section==None:
-            section=="DEFAULT"
-        return self.options[section].keys()
-    def get(self,  option, section=STANDARD_SECTION):
-        """Return the specified option.
+        self.accessed=None
 
-        Keyword Arguments:
-            option {string} -- The option to be returned.
-            section {string} -- The section where the option is located. (default: {First section})
-
-        Returns:
-            value -- value for the given option in the given section 
-        """
-        option, section=self._getKey(option, section)
-        self.accessed[section][option]=True
-        return self.options[section][option]
-
-    def set(self, value, option, section=STANDARD_SECTION):
-        """Set an option to a specific value.
-
-        Arguments:
-            value {obj} -- Value to be placed in the options dictionary.
-
-        Keyword Arguments:
-            option {str} -- Option to be set. (default: {None})
-            section {str} -- Section where the option is located. (default: {None})
-        """
-        option, section=self._getKey(option, section)
-        self.options[section][option]=value
+        self.options=def_opts
+        self.options.update(config_dict)
     
-    def __getitem__(self, key):
-        """Allow for shorthand notation to get an option from the standard section."""
-        return self.get(key)
-    def __setitem__(self, key, value):
-        """Allow for shorthand notation to set an option from the standard section."""
-        return self.set(value, key)
+    
+    @classmethod
+    def _parse_config_file(cls, config_file):
+        raise NotImplementedError("Implement this function in a subclass.")
+    
+    def _get(self, *keys):
+        if len(keys)==0:
+            return self.options
+        return self.get(*keys[:-1])[keys[-1]]
+    
+    def get(self, *keys):
+        return_value=self._get(*keys)
+        self.set_accessed(*keys)
+        return return_value
 
-    def convert_type(self, dtype, option, section=STANDARD_SECTION):
+    def set(self, value, *keys):
+        if len(keys)==0:
+            self.options=value
+        else:
+            self.get(*keys[:-1])[keys[-1]]=value
+    
+    def _reset_access(self):
+        self.accessed=None
+    
+    def _get_accessed(self, *keys):
+        if len(keys)==0:
+            return self.accessed
+        return self._get_accessed(*keys[:-1])[keys[-1]]
+    
+    def is_accessed(self, *keys):
+        if len(keys)==0:
+            return self.accessed is not None
+        return self.is_accessed(*keys[:-1]) and keys[-1] in self._get_accessed(*keys[:-1])
+    
+    def set_accessed(self, *keys):
+        if len(keys)>0:
+            accessed_parent=self._get_accessed(*keys[:-1])
+            if keys[-1] not in accessed_parent:
+                accessed_parent[keys[-1]]={}
+        else:
+            if self.accessed is None:
+                self.accessed={}
+
+    def get_accessed_options(self, *keys):
+        if not self.is_accessed(*keys):
+            return None
+
+        options=self._get(*keys)
+        if not isinstance(options, dict):
+                return options
+        else:
+            result={}
+            for opt in options:
+                child=self.get_accessed_options(*keys, opt)
+                if child is not None:
+                    result[opt]=child
+            return result
+    
+    def _find_depth_first(self, key, path=[]):
+        subtree=self._get(*path)
+        if isinstance(subtree, dict):
+            for k, v in subtree.items():
+                if k == key:
+                    return path + [k]
+                if isinstance(v, dict):
+                    result = self._find_depth_first(key, path + [k])
+                    if result is not None:
+                        return result
+        return None
+    
+    def _match_depth_first(self, *keys, subtree=None):
+        if len(keys)==0:
+            return []
+        if subtree is None:
+            subtree=self.options
+
+        if isinstance(subtree, dict):
+            key=keys[0]
+            for k,v in subtree.items():
+                result=None
+                if k==key:
+                    result=self._match_depth_first(*keys[1:], subtree=v)
+                elif isinstance(v, dict):
+                    result=self._match_depth_first(*keys, subtree=v)
+
+                if result is not None:
+                    return [k]+result
+        return None
+    
+    def __getitem__(self, keys):
+        if not isinstance(keys, tuple):
+            keys=(keys,)
+        path=self._match_depth_first(*keys)
+        if path is None:
+            raise KeyError(f"No matches for {keys} found.")
+        return self.get(*path)
+
+    def __setitem__(self, keys, value):
+        if not isinstance(keys, tuple):
+            keys=(keys,)
+        path=self._match_depth_first(*keys)
+        if path is None:
+            raise KeyError(f"No matches for {keys} found.")
+        return self.set(value,*path)
+
+    def convert_type(self, dtype, *keys):
         """Convert an input option from string to a given type.
 
         Arguments:
             dtype {func} -- Type conversion function. Typical are int, float or Path. bool is also allowed.
-
-        Keyword Arguments:
-            option {string} -- The option to be converted. (default: {None})
-            section {string} -- The section where the option is located (default: {None})
+            *keys: The option keys to be converted. If a subtree is given, all options in the subtree are converted.
         """
-        option, section=self._getKey(option, section)
         if dtype==bool:
             conversion_func=lambda val: val.lower() in ("true", "yes", "1", "t")
         else:
             conversion_func=dtype
-        self.set(conversion_func(self.options[section][option]),option=option, section=section)
+        option=self.get(*keys)
+        if isinstance(option, dict):
+            for key in option:
+                self.convert_type(dtype, *keys, key)
+        else:
+            self.set(conversion_func(option),*keys)
 
-    def convert_array(self, dtype, option, section=STANDARD_SECTION, sep=",", removeSpaces=False):
-        """Convert an input option from string to an array of the given type.
+    def convert_array(self, dtype, *keys, sep=",", removeSpaces=False):
+        """Convert one or multiple config options from string to an array of the given type.
 
         Arguments:
             dtype {type} -- Type to convert the array element, e.g. str, int, float
+            *keys: The option keys to be converted. If a subtree is given, all options in the subtree are converted.
+
 
         Keyword Arguments:
-            option {string} -- The option to be converted. (default: {None})
-            section {string } -- The section where the option is located (default: {None})
             sep {string} -- The separator between the array values (default: {","})
             removeSpaces {bool} -- Remove spaces in the elements when converting to string array. (default: {False})
         """
-        option, section=self._getKey(option, section)
-        array=self.options[section][option].split(sep)
-        if removeSpaces:
-            array=[x.strip() for x in array]
-        array=[a for a in array if a]
-        array=[dtype(a) for a in array]
-        self.set(array, option, section)
+        option=self.get(*keys)
+        if isinstance(option, dict):
+            for key in option:
+                self.convert_array(dtype, *keys, key, sep=sep, removeSpaces=removeSpaces)
+        elif isinstance(option, str):
+            array=option.split(sep)
+            if removeSpaces:
+                array=[x.strip() for x in array]
+            array=[a for a in array if a]
+            array=[dtype(a) for a in array]
+            self.set(array, *keys)
+        else:
+            raise ValueError(f"Option {keys} is not a string.")
     
+
     def add_outfile(self, output_files):
         """Add the given filename(s) to the list of outputfiles of your program. They will be listed in the logfile, together with their hash value.
         
@@ -163,14 +195,15 @@ class Input(object):
         for path in output_files:
             if not path.exists():
                 warnings.warn(f"At the moment, there is no such file: {path}")
-            self.outfilename.append(path)
+            self.outfilenames.append(path)
+
     def set_outfile(self, output_files):
         """Set the given filename(s) as the list of outputfiles of your program. They will be listed in the logfile, together with their hash value.
         
         Arguments:
             output_files {string or list of strings} -- The paths of the outputfiles. Relative paths will be interpreted relative to the current working directory.
         """
-        self.outfilename=[]
+        self.outfilenames=[]
         self.add_outfile(output_files)
 
     def hash_file(self, file):
@@ -199,11 +232,6 @@ class Input(object):
         Version: 1.0.0
         Input options: Config1.ini
         **************************
-        ---DEFAULT---
-        **************************
-        ---Sec1---
-        user: 1.0
-
         Returns:
             array -- array with lines including linebreak.
         """
@@ -216,15 +244,16 @@ class Input(object):
         log.append("# <Input> "+str(self.filename))
         log.append("# <Runtime> "+str(datetime.datetime.now()-self.creation_date))
         log.append("#**************************")
-        for sec in self.options.keys():
-            log.append("#---"+str(sec)+"---")
-            for opt in self.options[sec].keys():
-                if self.accessed[sec][opt] or not accessed_only:
-                    log.append("#"+str(opt)+": " + str(self.options[sec][opt]))
-        if len(self.outfilename)>0:
+        if accessed_only:
+            log_options_dict=self.get_accessed_options()
+        else:
+            log_options_dict=self.options
+        log_options_str=json.dumps(log_options_dict, indent=4, default=str)       
+        log+=["#" + line for line in log_options_str.split("\n")]
+        if len(self.outfilenames)>0:
             log.append("#**************************")
             log.append("#Output files created:")
-            for path in self.outfilename:
+            for path in self.outfilenames:
                 log.append("# <PATH> "+str(path))
                 log.append("# <HASH> "+self.hash_file(path))
         log=[l+"\n" for l in log]
@@ -265,11 +294,11 @@ class Input(object):
         log["version"]=self.version
         log["input"]=str(self.filename)
         log["runtime"]=str(datetime.datetime.now()-self.creation_date)
-        log["options"]=config_to_dict(self.config) #take the configparser-expanded, but not user-converted version for the log
         if accessed_only:
-            log["options"]={sec: {opt: val for opt, val in self.options[sec].items() if self.accessed[sec][opt]} for sec in self.options.keys()} #only accessed options
-            log["options"]= {sec: val for sec, val in log["options"].items() if len(val)>0} #remove empty sections
-        log["output_files"]=[{"path": str(path), "hash": self.hash_file(path)} for path in self.outfilename]
+            log["options"]=self.get_accessed_options()
+        else:
+            log["options"]=self.options
+        log["output_files"]=[{"path": str(path), "hash": self.hash_file(path)} for path in self.outfilenames]
         return log
 
     def show_data(self):
@@ -314,10 +343,12 @@ class Input(object):
 
         Arguments:
             new_logs {str or Path or iterable of str, Path} -- New logfiles to be created.
-            old_logs {str or Path or iterable of str, Path} -- Old logfiles
+            old_logs {str or Path or iterable of str, Path} -- Existing logfiles, listed as dependencies in the new logfiles. (default: {[]})
 
         Keyword Arguments:
             file_ext {str} -- if set, the file extensions in the provided logfile locations are replaced by 'file_ext' before the function is executed. (default: {log})
+            format {str} -- Format of the new logfiles. Can be 'json' or 'txt'. (default: {json})
+            accessed_only {bool} -- If True, only the options that were accessed are written to the log. (default: {True})
         """
         if isinstance(new_logs, str) or isinstance(new_logs, Path):
             new_logs=[new_logs]
@@ -335,6 +366,12 @@ class Input(object):
             self._write_log_txt(new_logs, old_logs, accessed_only)
         else:
             raise ValueError(f"Unknown format: {format}")
+
+
+
+
+            
+            
 
 
 

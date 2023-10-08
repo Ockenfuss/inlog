@@ -1,0 +1,4 @@
+section1:
+  factor: 2
+  intermediate: intermediateResult.dat
+  result: FinalResult.dat
