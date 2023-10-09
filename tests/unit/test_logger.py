@@ -9,25 +9,25 @@ class TestLogger(ut.TestCase):
 , "1.0")
 
     def test_get(self):
-        assert(self.logger.get("a")==1)
-        assert(self.logger.get("b", "c")==2)
-        assert(isinstance(self.logger.get(), dict))
-        assert(isinstance(self.logger.get("b"), dict))
+        self.assertEqual(self.logger.get("a"),1)
+        self.assertEqual(self.logger.get("b", "c"),2)
+        self.assertIsInstance(self.logger.get(), dict)
+        self.assertIsInstance(self.logger.get("b"), dict)
     
     def test_set(self):
         self.logger.set(4, "b", "c")
-        assert(self.logger.get("b", "c")==4)
+        self.assertEqual(self.logger.get("b", "c"),4)
         self.logger.set(5, "e")
-        assert(self.logger.get("e")==5)
+        self.assertEqual(self.logger.get("e"),5)
     
     def test_find_depth_first(self):
         logger=self.get_test_logger()
         logger.options={"a": 1, "b": {"c": 2}, "c": {"d": 3}}
-        assert(logger._find_depth_first("a")==["a"])
-        assert(logger._find_depth_first("b")==["b"])
-        assert(logger._find_depth_first("c")==["b","c"])
-        assert(logger._find_depth_first("d")==["c","d"])
-        assert(logger._find_depth_first("e")==None)
+        self.assertEqual(logger._find_depth_first("a"),["a"])
+        self.assertEqual(logger._find_depth_first("b"),["b"])
+        self.assertEqual(logger._find_depth_first("c"),["b","c"])
+        self.assertEqual(logger._find_depth_first("d"),["c","d"])
+        self.assertEqual(logger._find_depth_first("e"),None)
     
     def test_get_item(self):
         logger=self.get_test_logger()
@@ -66,79 +66,86 @@ class TestLogger(ut.TestCase):
     def test_is_accessed(self):
         #Nothing is accessed
         self.logger._reset_access()
-        assert(not self.logger.is_accessed())
-        assert(not self.logger.is_accessed("a"))
-        assert(not self.logger.is_accessed("b", "c"))
+        self.assertTrue(not self.logger.is_accessed())
+        self.assertTrue(not self.logger.is_accessed("a"))
+        self.assertTrue(not self.logger.is_accessed("b", "c"))
 
         #_get does not record an access
         self.logger._get("a")
-        assert(not self.logger.is_accessed("a"))
+        self.assertTrue(not self.logger.is_accessed("a"))
 
         #get does record an access
         self.logger.get("a")
-        assert(self.logger.is_accessed("a"))
-        assert(not self.logger.is_accessed("b"))
+        self.assertTrue(self.logger.is_accessed("a"))
+        self.assertTrue(not self.logger.is_accessed("b"))
 
         #accessing an element does access the parents as well
         self.logger.get("b", "c")
-        assert(self.logger.is_accessed("b"))
-        assert(self.logger.is_accessed("b", "c"))
+        self.assertTrue(self.logger.is_accessed("b"))
+        self.assertTrue(self.logger.is_accessed("b", "c"))
         #Repeated Access does not change anything
         self.logger.get("b")
-        assert(self.logger.is_accessed("b"))
-        assert(self.logger.is_accessed("b", "c"))
+        self.assertTrue(self.logger.is_accessed("b"))
+        self.assertTrue(self.logger.is_accessed("b", "c"))
     
     def test_get_accessed_options(self):
         self.logger._reset_access()
         self.logger.get("a")
-        assert(self.logger.get_accessed_options("a")==1)
-        assert(self.logger.get_accessed_options("b") is None)
+        self.assertEqual(self.logger.get_accessed_options("a"),1)
+        self.assertIsNone(self.logger.get_accessed_options("b"))
         self.logger.get("b")
-        assert(self.logger.get_accessed_options("b") == {})
+        self.assertEqual(self.logger.get_accessed_options("b") , {})
         self.logger.get("b", "c")
-        assert(self.logger.get_accessed_options("b") == {"c": 2})
-        assert(self.logger.get_accessed_options() == {"a":1, "b":{"c": 2}})
+        self.assertEqual(self.logger.get_accessed_options("b") , {"c": 2})
+        self.assertEqual(self.logger.get_accessed_options() , {"a":1, "b":{"c": 2}})
     
     def test_convert_type(self):
         #convert to str
         self.logger.convert_type(str, "b", "d")
-        assert(self.logger.get("b", "d")=="3.0")
+        self.assertEqual(self.logger.get("b", "d"),"3.0")
         #convert subtree to float
         self.logger.convert_type(float, "b")
-        assert(self.logger.get("b", "d")==3.0)
+        self.assertEqual(self.logger.get("b", "d"),3.0)
         #convert to bool
         self.logger.set("true", "b", "d")
         self.logger.convert_type(bool, "b", "d")
-        assert(self.logger.get("b", "d"))
+        self.assertTrue(self.logger.get("b", "d"))
         self.logger.set(3.0, "b", "d")
     
     def test_convert_array(self):
         #single value
         self.logger.convert_array(float, "e", "f")
-        assert(self.logger.get("e", "f")==[4.0])
+        self.assertEqual(self.logger.get("e", "f"),[4.0])
         #multiple values
         self.logger.convert_array(float, "e","g")
-        assert(self.logger.get("e", "g")==[4.0, 5.0, 6.0])
+        self.assertEqual(self.logger.get("e", "g"),[4.0, 5.0, 6.0])
         #subtree
         self.logger=self.get_test_logger()
         self.logger.convert_array(float, "e")
-        assert(self.logger.get("e", "f")==[4.0])
-        assert(self.logger.get("e", "g")==[4.0, 5.0, 6.0])
+        self.assertEqual(self.logger.get("e", "f"),[4.0])
+        self.assertEqual(self.logger.get("e", "g"),[4.0, 5.0, 6.0])
 
     
     def test_create_log_dict(self):
         self.logger._reset_access()
         self.logger.get("b", "c")
-        assert(self.logger._create_log_dict()["options"]["a"]==1)
-        assert(self.logger._create_log_dict(accessed_only=True)["options"]["b"]=={"c": 2})
-        assert("a" not in self.logger._create_log_dict(accessed_only=True)["options"])
+        self.assertEqual(self.logger._create_log_dict()["options"]["a"],1)
+        self.assertEqual(self.logger._create_log_dict(accessed_only=True)["options"]["b"],{"c": 2})
+        self.assertNotIn("a" ,self.logger._create_log_dict(accessed_only=True)["options"])
     
     def test_create_log_txt(self):
         self.logger._reset_access()
         self.logger.get("b", "c")
-        assert('#    "a": 1,\n' in self.logger._create_log_txt())
-        assert('#    "a": 1,\n' not in self.logger._create_log_txt(accessed_only=True))
-        assert('#    "b": {\n' in self.logger._create_log_txt(accessed_only=True))
+        self.assertIn('#    "a": 1,\n' , self.logger._create_log_txt())
+        self.assertNotIn('#    "a": 1,\n' , self.logger._create_log_txt(accessed_only=True))
+        self.assertIn('#    "b": {\n' , self.logger._create_log_txt(accessed_only=True))
+    
+    def test_str(self):
+        self.logger._reset_access()
+        self.logger.get("b", "c")
+        st=str(self.logger)
+        self.assertIn('#    "a": 1,\n' , st)
+        self.assertIn('#    "b": {\n' , st)
 
 
 

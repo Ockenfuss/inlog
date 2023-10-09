@@ -3,8 +3,6 @@
 Parse config files and keep track of your results by creating logfiles!
 
 
-[TOC]
-
 ## Motivation
 Imagine, you have a python program with some parameters. You make a few experiments with it, producing some results. Usually, people write the parameters in the filename:
 ```txt
@@ -27,7 +25,7 @@ config=inlog.load_yaml('Params.yaml', '1.0')
 config.write_log('Results1.txt')
 ```
 
-But there is more: `inlog` can store additional information like date, runtime or a hash of your data, it can keep track of complex histories of your results and it can even visualize them as a flowchart! To see a more comprehensive example, look at the [examples folder](examples)
+But there is more: `inlog` can store additional information like date, runtime or a [hash of your data](#hashes), it can keep track of complex histories of your results and it can even [visualize](#flowchart) them as a flowchart! To see a more comprehensive example, look at the [examples folder](https://github.com/Ockenfuss/inlog/tree/master/examples)
 
 ## Installation
 The basic version of `inlog` only depends on the python standard library.
@@ -148,9 +146,13 @@ config.add_outfile('Results2.txt')
 
 ### Writing Logs
 In order to write a log, you need to specify the file path (or multiple paths) of the new log. Optionally, you can specify existing log files, which will be included in the new log as dependencies. There are two different formats for logs: txt and json.
+By default, `write_log()` will replace the file extension of all given filenames with `.log`.
+```python
+config.write_log('Results1.txt', old_logs=['Dependency1.txt'])
+```
 
-#### JSON
-A json file. This format is recommended, since it allows to capture the tree-like structure of dependencies.
+#### JSON Format
+A json file. This format is the recommended default, since it allows to capture the tree-like structure of dependencies.
 Example:
 ```json
 {
@@ -248,6 +250,12 @@ python3 Script2.py Config2.ini
 
 
 ## Visualization
+Printing the logger object will yield a text version of the current log. Equivalently, you can call `show_data()`.
+```python
+print(config)
+config.show_data()
+```
+### Flowchart
 Calling `inlog-flowchart logfile.log` will convert a log "logfile.log" in json format to a Mermaid flowchart. Mermaid is a charting application, based on a markdown like syntax. You can paste the output of flowchart.py in the [Mermaid Live Editor](https://mermaid.live/) to obtain a flowchart.
 Just call:
 ```bash

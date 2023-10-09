@@ -400,7 +400,11 @@ class Logger(object):
 
     def show_data(self):
         """Print log."""
-        print(*self._create_log_txt())
+        print(*self._create_log_txt(accessed_only=False))
+    
+    def __str__(self):
+        """Get log as string."""
+        return "".join(self._create_log_txt(accessed_only=False))
 
     def _write_log_txt(self, new_logs, old_logs, accessed_only=False):
         old_lines=[]
