@@ -1,0 +1,22 @@
+{
+    "date": "2023-10-08 22:49:37.145181",
+    "program": "~/inlog/examples/Script1.py",
+    "version": "1.0",
+    "input": "Config1.yaml",
+    "runtime": "0:00:00.003489",
+    "options": {
+        "section1": {
+            "start": 1,
+            "stop": 10,
+            "increment": 2,
+            "intermediate": "intermediateResult.dat"
+        }
+    },
+    "output_files": [
+        {
+            "path": "~/inlog/examples/intermediateResult.dat",
+            "hash": "22a23bcb0798a2b67902a51faad1d04fca6489abdc7c3f1ced983ac22658a721"
+        }
+    ],
+    "dependencies": {}
+}

@@ -1,0 +1,44 @@
+{
+    "date": "2023-10-08 20:59:51.019125",
+    "program": "~/inlog/examples/Script2.py",
+    "version": "1.0",
+    "input": "Config2.ini",
+    "runtime": "0:00:00.006449",
+    "options": {
+        "section1": {
+            "factor": 2,
+            "intermediate": "intermediateResult.dat",
+            "result": "FinalResult.dat"
+        }
+    },
+    "output_files": [
+        {
+            "path": "~/inlog/examples/FinalResult.dat",
+            "hash": "6542c8602f59c351652e382f0448b2caba8c6404a133fca7b137ccd679bd7f4b"
+        }
+    ],
+    "dependencies": {
+        "~/inlog/examples/intermediateResult.log": {
+            "date": "2023-10-08 20:59:49.026310",
+            "program": "~/inlog/examples/Script1.py",
+            "version": "1.0",
+            "input": "Config1.ini",
+            "runtime": "0:00:00.005438",
+            "options": {
+                "section1": {
+                    "start": 1,
+                    "stop": 10,
+                    "increment": 2,
+                    "intermediate": "intermediateResult.dat"
+                }
+            },
+            "output_files": [
+                {
+                    "path": "~/inlog/examples/intermediateResult.dat",
+                    "hash": "22a23bcb0798a2b67902a51faad1d04fca6489abdc7c3f1ced983ac22658a721"
+                }
+            ],
+            "dependencies": {}
+        }
+    }
+}
