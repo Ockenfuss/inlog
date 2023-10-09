@@ -13,15 +13,20 @@ class Logger(object):
     """Parser to read inputfiles and create logs."""
 
     def __init__(self, config_dict, version, def_opts={}):
-        """Create Logger for config parsing and logging.
+        """
+        Create Logger for config parsing and logging.
 
-        Arguments:
-            object {Input} -- the parser object\n
-            infilename {str or Path or None} -- the file with the input options. Set to 'None' if not given.\n
-            version {str} -- version of the program\n
+        Parameters
+        ----------
+        config_dict : dict
+            Dictionary with the input parameters.
+        version : str
+            Version of the program.
 
-        Keyword Arguments:
-            def_opts {dict} -- dictionary with default input options and values. (default: {{}})
+        Keyword Arguments
+        -----------------
+        def_opts : dict, optional
+            Dictionary with default input parameters. (default: {})
         """
         self.filename=None
         self.version=version
@@ -34,40 +39,64 @@ class Logger(object):
         self.options.update(config_dict)
     
     
-    @classmethod
-    def _parse_config_file(cls, config_file):
-        raise NotImplementedError("Implement this function in a subclass.")
-    
     def _get(self, *keys):
+        """Get the value of an option without setting it to accessed.
+
+        Returns
+        -------
+        value
+            The value of the option
+        """
         if len(keys)==0:
             return self.options
         return self.get(*keys[:-1])[keys[-1]]
     
     def get(self, *keys):
+        """Get the value of an input parameter. Mark this parameter as accessed.
+
+        Parameters
+        ----------
+            *keys: The keys to the input parameter. If no keys are given, the whole parameter dictionary is returned.
+
+        Returns
+        -------
+        value
+            The value for the given keys.
+        """
         return_value=self._get(*keys)
         self.set_accessed(*keys)
         return return_value
 
     def set(self, value, *keys):
+        """Set the value of an parameter.
+
+        Arguments:
+            value: The value to be set.
+            *keys: The keys to the parameter.
+        """
         if len(keys)==0:
             self.options=value
         else:
             self.get(*keys[:-1])[keys[-1]]=value
     
     def _reset_access(self):
+        """Reset the accessed status of all parameters."""
         self.accessed=None
     
     def _get_accessed(self, *keys):
+        """Get the accessed subtree of a parameter."""
         if len(keys)==0:
             return self.accessed
         return self._get_accessed(*keys[:-1])[keys[-1]]
     
     def is_accessed(self, *keys):
+        """Get the accessed status of a parameter."""
         if len(keys)==0:
             return self.accessed is not None
         return self.is_accessed(*keys[:-1]) and keys[-1] in self._get_accessed(*keys[:-1])
     
     def set_accessed(self, *keys):
+        """Mark a parameter as accessed."""
         if len(keys)>0:
             accessed_parent=self._get_accessed(*keys[:-1])
             if keys[-1] not in accessed_parent:
@@ -77,6 +106,7 @@ class Logger(object):
                 self.accessed={}
 
     def get_accessed_options(self, *keys):
+        """Get only the accessed parameters of a given subtree."""
         if not self.is_accessed(*keys):
             return None
 
@@ -104,6 +134,21 @@ class Logger(object):
         return None
     
     def _match_depth_first(self, *keys, subtree=None):
+        """Find the first matching path to a parameter or subtree in the config dictionary.
+
+        Parameters
+        ----------
+        *keys: str
+            Keys matching the path to the parameter or subtree, in the order they appear in the path.
+            For example, the keys (b,d) will match the paths a/b/c/d as well as a/b/d.
+        subtree : dict, optional
+            The subtree in which to search, by default None
+
+        Returns
+        -------
+        list
+            list of keys leading to the first matching parameter or subtree.
+        """
         if len(keys)==0:
             return []
         if subtree is None:
@@ -123,6 +168,18 @@ class Logger(object):
         return None
     
     def __getitem__(self, keys):
+        """Get the first matching parameter or subtree in the config dictionary.
+
+        Parameters
+        ----------
+        *keys: str
+            Keys matching the path to the parameter or subtree, in the order they appear in the path.
+            For example, the keys (b,d) will match the paths a/b/c/d as well as a/b/d.
+        Returns
+        -------
+        value
+            The depth-first matching parameter or subtree.
+        """
         if not isinstance(keys, tuple):
             keys=(keys,)
         path=self._match_depth_first(*keys)
@@ -131,19 +188,36 @@ class Logger(object):
         return self.get(*path)
 
     def __setitem__(self, keys, value):
+        """Set the first matching parameter or subtree in the config dictionary.
+
+        Parameters
+        ----------
+        keys: tuple
+            Keys matching the path to the parameter or subtree, in the order they appear in the path.
+            For example, the keys (b,d) will match the paths a/b/c/d as well as a/b/d.
+        value: The value for the matching parameter or subtree.
+        """
         if not isinstance(keys, tuple):
             keys=(keys,)
         path=self._match_depth_first(*keys)
         if path is None:
             raise KeyError(f"No matches for {keys} found.")
-        return self.set(value,*path)
+        self.set(value,*path)
 
     def convert_type(self, dtype, *keys):
-        """Convert an input option from string to a given type.
+        """
+        Convert an input option from string to a given type.
 
-        Arguments:
-            dtype {func} -- Type conversion function. Typical are int, float or Path. bool is also allowed.
-            *keys: The option keys to be converted. If a subtree is given, all options in the subtree are converted.
+        Parameters
+        ----------
+        dtype : function
+            Type conversion function. Typical are int, float or Path. bool is also allowed.
+        *keys : tuple
+            The option keys to be converted. If a subtree is given, all options in the subtree are converted.
+        
+        Notes
+        -----
+        If `dtype` is `bool`, the conversion function will convert the string values "true", "yes", "1", and "t" to `True`, and all other values to `False`.
         """
         if dtype==bool:
             conversion_func=lambda val: val.lower() in ("true", "yes", "1", "t")
@@ -157,16 +231,22 @@ class Logger(object):
             self.set(conversion_func(option),*keys)
 
     def convert_array(self, dtype, *keys, sep=",", removeSpaces=False):
-        """Convert one or multiple config options from string to an array of the given type.
+        """
+        Convert one or multiple config options from string to an array of the given type.
 
-        Arguments:
-            dtype {type} -- Type to convert the array element, e.g. str, int, float
-            *keys: The option keys to be converted. If a subtree is given, all options in the subtree are converted.
+        Parameters
+        ----------
+        dtype : type
+            Type to convert the array element, e.g. str, int, float
+        *keys : tuple
+            The option keys to be converted. If a subtree is given, all options in the subtree are converted.
 
-
-        Keyword Arguments:
-            sep {string} -- The separator between the array values (default: {","})
-            removeSpaces {bool} -- Remove spaces in the elements when converting to string array. (default: {False})
+        Keyword Arguments
+        -----------------
+        sep : str, optional
+            The separator between the array values (default: ',')
+        removeSpaces : bool, optional
+            Remove spaces in the elements when converting to string array. (default: False)
         """
         option=self.get(*keys)
         if isinstance(option, dict):
@@ -184,11 +264,14 @@ class Logger(object):
     
 
     def add_outfile(self, output_files):
-        """Add the given filename(s) to the list of outputfiles of your program. They will be listed in the logfile, together with their hash value.
-        
-        Arguments:
-            output_files {string or Path or list} -- The paths of the outputfiles. Relative paths will be interpreted relative to the current working directory.
         """
+            Add the given filename(s) to the list of outputfiles of your program. They will be listed in the logfile, together with their hash value.
+
+            Parameters
+            ----------
+            output_files : str or Path or list
+                The paths of the outputfiles. Relative paths will be interpreted relative to the current working directory.
+            """
         if isinstance(output_files, str) or isinstance(output_files, Path):
             output_files=[output_files]
         output_files=[Path(p).resolve() for p in output_files]
@@ -198,22 +281,30 @@ class Logger(object):
             self.outfilenames.append(path)
 
     def set_outfile(self, output_files):
-        """Set the given filename(s) as the list of outputfiles of your program. They will be listed in the logfile, together with their hash value.
-        
-        Arguments:
-            output_files {string or list of strings} -- The paths of the outputfiles. Relative paths will be interpreted relative to the current working directory.
+        """
+        Set the given filename(s) as the list of outputfiles of your program. They will be listed in the logfile, together with their hash value.
+
+        Parameters
+        ----------
+        output_files : str or list of str
+            The paths of the outputfiles. Relative paths will be interpreted relative to the current working directory.
         """
         self.outfilenames=[]
         self.add_outfile(output_files)
 
     def hash_file(self, file):
-        """Calculate the hash of a file.
-        
-        Arguments:
-            file {str or Path} -- The path of the file
-        
-        Returns:
-            str -- The hexadecimal sha256 hash of the file.
+        """
+        Calculate the hash of a file.
+
+        Parameters
+        ----------
+        file : str or Path
+            The path of the file
+
+        Returns
+        -------
+        str
+            The hexadecimal sha256 hash of the file.
         """
         BLOCK_SIZE = 65536 # The size of each read from the file
         file_hash = hashlib.sha256() # Create the hash object, can use something other than `.sha256()` if you wish
@@ -225,15 +316,18 @@ class Logger(object):
         return file_hash.hexdigest() # Get the hexadecimal digest of the hash
 
     def _create_log_txt(self, accessed_only=False):
-        """Create a log of the Input object.
+        """
+        Create a log in text format
 
-        Example:
-        Program: Progam1.py
-        Version: 1.0.0
-        Input options: Config1.ini
-        **************************
-        Returns:
-            array -- array with lines including linebreak.
+        Parameters
+        ----------
+        accessed_only : bool, optional
+            If True, only include options that were accessed, by default False
+
+        Returns
+        -------
+        list
+            List of strings representing the log, including linebreaks.
         """
         log=[]
         log.append("cd "+os.getcwd())
@@ -261,7 +355,7 @@ class Logger(object):
     
 
     def _create_log_dict(self, accessed_only=False):
-        """Create a log dictionary of the Input object.
+        """Create a log dictionary.
 
         Example:
         {
@@ -284,7 +378,10 @@ class Logger(object):
                 }
             ]
         }
-
+        Parameters
+        ----------
+        accessed_only : bool, optional
+            If True, only include parameters that were accessed, by default False
         Returns:
             dict -- dictionary with the log information.
         """
@@ -337,18 +434,23 @@ class Logger(object):
                 json.dump(log_json, newfile, indent=4, default=str)
 
     def write_log(self, new_logs, old_logs=[], file_ext='log', format='json', accessed_only=True):
-        """Write log to files.
+        """
+        Write log to files.
 
         Read all old logfiles, combine with the log of the current program and save them to the new locations.
 
-        Arguments:
-            new_logs {str or Path or iterable of str, Path} -- New logfiles to be created.
-            old_logs {str or Path or iterable of str, Path} -- Existing logfiles, listed as dependencies in the new logfiles. (default: {[]})
-
-        Keyword Arguments:
-            file_ext {str} -- if set, the file extensions in the provided logfile locations are replaced by 'file_ext' before the function is executed. (default: {log})
-            format {str} -- Format of the new logfiles. Can be 'json' or 'txt'. (default: {json})
-            accessed_only {bool} -- If True, only the options that were accessed are written to the log. (default: {True})
+        Parameters
+        ----------
+        new_logs : str or Path or iterable of str, Path
+            New logfiles to be created.
+        old_logs : str or Path or iterable of str, Path, optional
+            Existing logfiles, listed as dependencies in the new logfiles. (default: [])
+        file_ext : str, optional
+            If set, the file extensions in the provided logfile locations are replaced by 'file_ext' before the function is executed. (default: 'log')
+        format : str, optional
+            Format of the new logfiles. Can be 'json' or 'txt'. (default: 'json')
+        accessed_only : bool, optional
+            If True, only the options that were accessed are written to the log. (default: True)
         """
         if isinstance(new_logs, str) or isinstance(new_logs, Path):
             new_logs=[new_logs]
