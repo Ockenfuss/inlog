@@ -5,7 +5,7 @@ from pathlib import Path
 #specify the version number of this program
 VERSION="1.0"
 
-#provide the ini file as a command line argument
+#provide the config file as a command line argument
 par=argparse.ArgumentParser()
 par.add_argument('infile')
 args=par.parse_args()
@@ -22,10 +22,10 @@ elif infile.suffix==".ini":
     config.convert_type(int, "section1","stop")
 
 
-#print the config parameters
+#print the input parameters
 config.show_data()
 
-#create some data based on the input parameters
+#create some data based on the input parameters. In this case, just a simple range[start, stop, increment]
 data=list(range(config.get("section1","start"),config.get("section1","stop"),config.get("section1","increment")))
 
 #save the created data as intermediate result
