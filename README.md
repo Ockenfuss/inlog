@@ -15,7 +15,7 @@ There are a few problems with this:
 - The list of parameters is not machine readable.
 
 `inlog` ("Input Logger") tries to solve those problems by creating a log file with all parameters next to your results.
-Therefore, you need to put your parameters into a separate file, e.g. in yaml or ini format:
+Therefore, you need to put your parameters into a separate file, e.g. in yaml or ini format.
 Then, it requires just three additional lines in your python code to create a comprehensive logfile:
 ```python
 import inlog
@@ -198,7 +198,7 @@ Example:
             "dependencies": {}
         }
     }
-}%                                  
+}
 ```
 
 #### Text Format
