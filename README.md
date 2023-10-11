@@ -20,12 +20,12 @@ Then, it requires just three additional lines in your python code to create a co
 ```python
 import inlog
 config=inlog.load_yaml('Params.yaml', '1.0')
-#do your stuff, using the parameters in config and save into 'Results1.txt'
+#do your stuff, using the parameters in config and save results into 'Results1.txt'
 #...
-config.write_log('Results1.txt')
+config.write_log('Results1.txt') #this will create a file 'Results1.log' in the same folder as 'Results1.txt'
 ```
 
-But there is more: `inlog` can store additional information like date, runtime or a [hash of your data](#hashes), it can keep track of complex histories of your results and it can even [visualize](#flowchart) them as a flowchart! To see a more comprehensive example, look at the [examples folder](https://github.com/Ockenfuss/inlog/tree/master/examples)
+But there is more: `inlog` can store additional information like date, runtime or a [hash of your data](https://github.com/Ockenfuss/inlog#hashes), it can keep track of [complex histories](https://github.com/Ockenfuss/inlog#writing-logs) of your results and it can even visualize them as a [flowchart](https://github.com/Ockenfuss/inlog#flowchart)! To see a more comprehensive example, look at the [examples folder](https://github.com/Ockenfuss/inlog/tree/master/examples)
 
 ## Installation
 The basic version of `inlog` only depends on the python standard library.
