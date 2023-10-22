@@ -38,7 +38,7 @@ class Logger(object):
         if def_opts is None:
             def_opts={}
         self.options=def_opts
-        self.options.update(config_dict)
+        self.update(config_dict)
     
     
     def _get(self, *keys):
@@ -80,6 +80,31 @@ class Logger(object):
             self.options=value
         else:
             self.get(*keys[:-1])[keys[-1]]=value
+    
+    def update(self, update_dict, *keys):
+        """Update the internal config dictionary with values from a new dictionary recursively.
+
+        Parameters
+        ----------
+        update_dict : dict
+            The new dictionary.
+        *keys : tuple
+            The keys to the subtree to be updated.
+        """
+        subtree=self._get(*keys)
+        if isinstance(subtree, dict):
+            for key,value in update_dict.items():
+                if key in subtree:
+                    if isinstance(value, dict) and isinstance(subtree[key], dict):
+                        self.update(value, *keys, key)
+                    else:
+                        self.set(value, *keys, key)
+                else:
+                    self.set(value, *keys, key)
+        else:
+            keys_str=["'"+str(k)+"'" for k in keys]
+            raise ValueError(f"Cannot update tree element {keys} because it is not a dictionary. Use set(update_dict, {','.join(keys_str)}) instead.")
+
     
     def _reset_access(self):
         """Reset the accessed status of all parameters."""

@@ -153,6 +153,27 @@ class TestLogger(ut.TestCase):
         logger2=Logger({"section1": {"name": "2"}}, "1.0")
         self.assertEqual(logger1.get("section1", "name"), "1")
         self.assertEqual(logger2.get("section1", "name"), "2")
+    
+    def test_update(self):
+        """Test that options can be updated."""
+        logger=Logger({"section1": {"name": "1"}}, "1.0")
+        #Update a subsection
+        logger.update({"age": "2", "parents":{"mother":"mia"}}, "section1")
+        self.assertEqual(logger.get("section1", "name"), "1")
+        self.assertEqual(logger.get("section1", "age"), "2")
+        self.assertEqual(logger.get("section1", "parents","mother"), "mia")
+        #Update without specifying a section. Note how this is different from set(), which would not keep the old options.
+        logger.update({"section1": {"name": "2"}})
+        self.assertEqual(logger.get("section1", "name"), "2")
+        self.assertEqual(logger.get("section1", "age"), "2")
+        #Try to update an item wich is not a dict. This should raise an error, pointing to set() as the appropriate method.
+        self.assertRaises(ValueError, logger.update,{"section1": {"name": "2"}}, "section1", "name")
+    
+    def test_default_options(self):
+        """Test that default options are used if not present in the config dict."""
+        logger=Logger({"section1": {"name": "1"}}, "1.0", def_opts={"section1": {"name": "2", "age": "3"}})
+        self.assertEqual(logger.get("section1", "name"), "1")
+        self.assertEqual(logger.get("section1", "age"), "3")
 
 
 
