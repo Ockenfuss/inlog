@@ -12,7 +12,7 @@ import json
 class Logger(object):
     """Parser to read inputfiles and create logs."""
 
-    def __init__(self, config_dict, version, def_opts={}):
+    def __init__(self, config_dict, version, def_opts=None):
         """
         Create Logger for config parsing and logging.
 
@@ -26,7 +26,7 @@ class Logger(object):
         Keyword Arguments
         -----------------
         def_opts : dict, optional
-            Dictionary with default input parameters. (default: {})
+            Dictionary with default input parameters. (default: None)
         """
         self.filename=None
         self.version=version
@@ -35,6 +35,8 @@ class Logger(object):
         
         self.accessed=None
 
+        if def_opts is None:
+            def_opts={}
         self.options=def_opts
         self.options.update(config_dict)
     
@@ -121,7 +123,9 @@ class Logger(object):
                     result[opt]=child
             return result
     
-    def _find_depth_first(self, key, path=[]):
+    def _find_depth_first(self, key, path=None):
+        if path is None:
+            path=[]
         subtree=self._get(*path)
         if isinstance(subtree, dict):
             for k, v in subtree.items():
@@ -437,7 +441,7 @@ class Logger(object):
             with open(new, "w") as newfile:
                 json.dump(log_json, newfile, indent=4, default=str)
 
-    def write_log(self, new_logs, old_logs=[], file_ext='log', format='json', accessed_only=True):
+    def write_log(self, new_logs, old_logs=None, file_ext='log', format='json', accessed_only=True):
         """
         Write log to files.
 
@@ -448,7 +452,7 @@ class Logger(object):
         new_logs : str or Path or iterable of str, Path
             New logfiles to be created.
         old_logs : str or Path or iterable of str, Path, optional
-            Existing logfiles, listed as dependencies in the new logfiles. (default: [])
+            Existing logfiles, listed as dependencies in the new logfiles. (default: None)
         file_ext : str, optional
             If set, the file extensions in the provided logfile locations are replaced by 'file_ext' before the function is executed. (default: 'log')
         format : str, optional
@@ -458,7 +462,9 @@ class Logger(object):
         """
         if isinstance(new_logs, str) or isinstance(new_logs, Path):
             new_logs=[new_logs]
-        if isinstance(old_logs, str) or isinstance(old_logs, Path):
+        if old_logs is None:
+            old_logs=[]
+        elif isinstance(old_logs, str) or isinstance(old_logs, Path):
             old_logs=[old_logs]
         old_logs=[Path(p) for p in old_logs]
         new_logs=[Path(p) for p in new_logs]

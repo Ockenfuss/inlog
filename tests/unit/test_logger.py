@@ -146,6 +146,13 @@ class TestLogger(ut.TestCase):
         st=str(self.logger)
         self.assertIn('#    "a": 1,\n' , st)
         self.assertIn('#    "b": {\n' , st)
+    
+    def test_create_multiple(self):
+        """Test that multiple independent logger objects can be created in the same script."""
+        logger1=Logger({"section1": {"name": "1"}}, "1.0")
+        logger2=Logger({"section1": {"name": "2"}}, "1.0")
+        self.assertEqual(logger1.get("section1", "name"), "1")
+        self.assertEqual(logger2.get("section1", "name"), "2")
 
 
 
