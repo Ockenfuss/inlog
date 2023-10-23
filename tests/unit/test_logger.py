@@ -9,29 +9,32 @@ class TestLogger(ut.TestCase):
 , "1.0")
 
     def test_get(self):
-        self.assertEqual(self.logger.get("a"),1)
-        self.assertEqual(self.logger.get("b", "c"),2)
-        self.assertIsInstance(self.logger.get(), dict)
-        self.assertIsInstance(self.logger.get("b"), dict)
+        self.assertEqual(self.logger._get("a"),1)
+        self.assertEqual(self.logger._get("b", "c"),2)
+        self.assertIsInstance(self.logger._get(), dict)
+        self.assertIsInstance(self.logger._get("b"), dict)
     
     def test_set(self):
-        self.logger.set(4, "b", "c")
-        self.assertEqual(self.logger.get("b", "c"),4)
-        self.logger.set(5, "e")
-        self.assertEqual(self.logger.get("e"),5)
-    
-    def test_find_depth_first(self):
         logger=self.get_test_logger()
-        logger.options={"a": 1, "b": {"c": 2}, "c": {"d": 3}}
-        self.assertEqual(logger._find_depth_first("a"),["a"])
-        self.assertEqual(logger._find_depth_first("b"),["b"])
-        self.assertEqual(logger._find_depth_first("c"),["b","c"])
-        self.assertEqual(logger._find_depth_first("d"),["c","d"])
-        self.assertEqual(logger._find_depth_first("e"),None)
+        logger.set(4, "b", "c")
+        self.assertEqual(logger.get("b", "c"),4)
+        logger.set(5, "e")
+        self.assertEqual(logger.get("e"),5)
+        #Currently, you can also set a dict as leaf value. Unlike set_subtree, this will not generate new accessible keys
+        logger.set({"h": 6}, "e")
+        self.assertEqual(logger.get("e"),{"h": 6})
+        self.assertRaises(KeyError, logger.get, "e", "h")
+    
+    def test_set_subtree(self):
+        logger=self.get_test_logger()
+        logger.set_subtree({"c": 5, "e":5}, "b")
+        self.assertEqual(logger.get("b", "c"),5)
+        self.assertEqual(logger.get("b", "e"),5)
+        self.assertRaises(KeyError, logger.get, "b", "d")
+    
     
     def test_get_item(self):
-        logger=self.get_test_logger()
-        logger.options={"a": 1, "b": {"c": {"b":2}}, "c": {"b": 3}}
+        logger=Logger({"a": 1, "b": {"c": {"b":2}}, "c": {"b": 3}}, "1.0")
         self.assertEqual(logger["a"],1)
         self.assertEqual(logger["b"],{"c": {"b":2}})
         self.assertEqual(logger["c"],{"b":2})
@@ -41,9 +44,9 @@ class TestLogger(ut.TestCase):
         self.assertRaises(KeyError,logger.__getitem__, ("a","b"))
 
     def test_set_item(self):
-        logger=self.get_test_logger()
-        logger.options={"a": 1, "b": {"c": {"b":2}}, "c": {"b": 3}}
+        logger=Logger({"a": 1, "b": {"c": {"b":2}}, "c": {"b": 3}}, "1.0")
         logger["a"]=5
+        self.assertFalse(logger.is_accessed("a"))
         self.assertEqual(logger["a"],5)
         logger["c", "b"]=5
         self.assertEqual(logger["c","b"],5)
@@ -51,39 +54,35 @@ class TestLogger(ut.TestCase):
         self.assertEqual(logger["b", "c", "b"],5)
         self.assertRaises(KeyError,logger.__setitem__, ("a","b"), 5)
 
-    def test_match_depth_first(self):
-        logger=self.get_test_logger()
-        logger.options={"a": 1, "b": {"c": {"b":2}}, "c": {"b": 3}}
-        self.assertEqual(logger._match_depth_first("a"),["a"])
-        self.assertEqual(logger._match_depth_first("b"),["b"])
-        self.assertEqual(logger._match_depth_first("c"),["b", "c"])
-        self.assertEqual(logger._match_depth_first("b","c"),["b", "c"])
-        self.assertEqual(logger._match_depth_first("c","b"),["b", "c", "b"])
-        self.assertIsNone(logger._match_depth_first("a","b"))
-
-
-    
     def test_is_accessed(self):
         #Nothing is accessed
         self.logger._reset_access()
-        self.assertTrue(not self.logger.is_accessed())
-        self.assertTrue(not self.logger.is_accessed("a"))
-        self.assertTrue(not self.logger.is_accessed("b", "c"))
+        self.assertFalse(self.logger.is_accessed())
+        self.assertFalse(self.logger.is_accessed("a"))
+        self.assertFalse(self.logger.is_accessed("b", "c"))
 
         #_get does not record an access
         self.logger._get("a")
-        self.assertTrue(not self.logger.is_accessed("a"))
+        self.assertFalse(self.logger.is_accessed("a"))
 
         #get does record an access
         self.logger.get("a")
         self.assertTrue(self.logger.is_accessed("a"))
-        self.assertTrue(not self.logger.is_accessed("b"))
+        self.assertFalse(self.logger.is_accessed("b"))
 
-        #accessing an element does access the parents as well
+        #accessing an element does not access the parents
         self.logger.get("b", "c")
+        self.assertFalse(self.logger.is_accessed("b"))
+        self.assertTrue(self.logger.is_accessed("b", "c"))
+
+        #accessing a parent does access the children as well
+        self.logger._reset_access()
+        self.logger.get("b")
         self.assertTrue(self.logger.is_accessed("b"))
         self.assertTrue(self.logger.is_accessed("b", "c"))
+
         #Repeated Access does not change anything
+        self.logger.get("b", "c")
         self.logger.get("b")
         self.assertTrue(self.logger.is_accessed("b"))
         self.assertTrue(self.logger.is_accessed("b", "c"))
@@ -94,36 +93,40 @@ class TestLogger(ut.TestCase):
         self.assertEqual(self.logger.get_accessed_options("a"),1)
         self.assertIsNone(self.logger.get_accessed_options("b"))
         self.logger.get("b")
-        self.assertEqual(self.logger.get_accessed_options("b") , {})
+        self.assertEqual(self.logger.get_accessed_options("b") , {"c": 2, "d": 3.0})
+        self.logger._reset_access()
+        self.logger.get("a")
         self.logger.get("b", "c")
         self.assertEqual(self.logger.get_accessed_options("b") , {"c": 2})
         self.assertEqual(self.logger.get_accessed_options() , {"a":1, "b":{"c": 2}})
     
     def test_convert_type(self):
+        logger=self.get_test_logger()
         #convert to str
-        self.logger.convert_type(str, "b", "d")
-        self.assertEqual(self.logger.get("b", "d"),"3.0")
+        logger.convert_type(str, "b", "d")
+        self.assertEqual(logger.get("b", "d"),"3.0")
         #convert subtree to float
-        self.logger.convert_type(float, "b")
-        self.assertEqual(self.logger.get("b", "d"),3.0)
+        logger.convert_type(float, "b")
+        self.assertEqual(logger.get("b", "d"),3.0)
         #convert to bool
-        self.logger.set("true", "b", "d")
-        self.logger.convert_type(bool, "b", "d")
-        self.assertTrue(self.logger.get("b", "d"))
-        self.logger.set(3.0, "b", "d")
+        logger.set("true", "b", "d")
+        logger.convert_type(bool, "b", "d")
+        self.assertTrue(logger.get("b", "d"))
+        logger.set(3.0, "b", "d")
     
     def test_convert_array(self):
+        logger=self.get_test_logger()
         #single value
-        self.logger.convert_array(float, "e", "f")
-        self.assertEqual(self.logger.get("e", "f"),[4.0])
+        logger.convert_array(float, "e", "f")
+        self.assertEqual(logger.get("e", "f"),[4.0])
         #multiple values
-        self.logger.convert_array(float, "e","g")
-        self.assertEqual(self.logger.get("e", "g"),[4.0, 5.0, 6.0])
+        logger.convert_array(float, "e","g")
+        self.assertEqual(logger.get("e", "g"),[4.0, 5.0, 6.0])
         #subtree
-        self.logger=self.get_test_logger()
-        self.logger.convert_array(float, "e")
-        self.assertEqual(self.logger.get("e", "f"),[4.0])
-        self.assertEqual(self.logger.get("e", "g"),[4.0, 5.0, 6.0])
+        logger=self.get_test_logger()
+        logger.convert_array(float, "e")
+        self.assertEqual(logger.get("e", "f"),[4.0])
+        self.assertEqual(logger.get("e", "g"),[4.0, 5.0, 6.0])
 
     
     def test_create_log_dict(self):
@@ -153,21 +156,6 @@ class TestLogger(ut.TestCase):
         logger2=Logger({"section1": {"name": "2"}}, "1.0")
         self.assertEqual(logger1.get("section1", "name"), "1")
         self.assertEqual(logger2.get("section1", "name"), "2")
-    
-    def test_update(self):
-        """Test that options can be updated."""
-        logger=Logger({"section1": {"name": "1"}}, "1.0")
-        #Update a subsection
-        logger.update({"age": "2", "parents":{"mother":"mia"}}, "section1")
-        self.assertEqual(logger.get("section1", "name"), "1")
-        self.assertEqual(logger.get("section1", "age"), "2")
-        self.assertEqual(logger.get("section1", "parents","mother"), "mia")
-        #Update without specifying a section. Note how this is different from set(), which would not keep the old options.
-        logger.update({"section1": {"name": "2"}})
-        self.assertEqual(logger.get("section1", "name"), "2")
-        self.assertEqual(logger.get("section1", "age"), "2")
-        #Try to update an item wich is not a dict. This should raise an error, pointing to set() as the appropriate method.
-        self.assertRaises(ValueError, logger.update,{"section1": {"name": "2"}}, "section1", "name")
     
     def test_default_options(self):
         """Test that default options are used if not present in the config dict."""

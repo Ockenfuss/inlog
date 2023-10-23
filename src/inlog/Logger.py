@@ -8,6 +8,7 @@ import warnings
 from pathlib import Path
 import json
 import json
+from inlog.Tree import TreeNode
 
 class Logger(object):
     """Parser to read inputfiles and create logs."""
@@ -33,12 +34,13 @@ class Logger(object):
         self.creation_date=datetime.datetime.now()
         self.outfilenames=[]
         
-        self.accessed=None
-
         if def_opts is None:
             def_opts={}
-        self.options=def_opts
-        self.update(config_dict)
+        self.options=TreeNode.from_leafdict(def_opts)
+        config_tree=TreeNode.from_leafdict(config_dict)
+        self.options.update(config_tree)
+        self.accessed=self.options.copy()
+        self.accessed.set_all(False)
     
     
     def _get(self, *keys):
@@ -49,9 +51,7 @@ class Logger(object):
         value
             The value of the option
         """
-        if len(keys)==0:
-            return self.options
-        return self.get(*keys[:-1])[keys[-1]]
+        return self.options.get(*keys).to_leafdict()
     
     def get(self, *keys):
         """Get the value of an input parameter. Mark this parameter as accessed.
@@ -70,131 +70,77 @@ class Logger(object):
         return return_value
 
     def set(self, value, *keys):
-        """Set the value of an parameter.
+        """Set the value of a parameter.
 
         Arguments:
             value: The value to be set.
             *keys: The keys to the parameter.
         """
-        if len(keys)==0:
-            self.options=value
-        else:
-            self.get(*keys[:-1])[keys[-1]]=value
+        self.options.get(*keys).value=value
+        self.options.make_leaf(*keys)
     
-    def update(self, update_dict, *keys):
-        """Update the internal config dictionary with values from a new dictionary recursively.
+    def set_subtree(self, config_dict, *keys):
+        """Set multiple options at once by providing a (nested) dictionary.
 
         Parameters
         ----------
-        update_dict : dict
-            The new dictionary.
+        config_dict : dict
+            The dictionary with the new options. Can be nested.
         *keys : tuple
-            The keys to the subtree to be updated.
+            The keys to the subtree where the new options will be inserted.
         """
-        subtree=self._get(*keys)
-        if isinstance(subtree, dict):
-            for key,value in update_dict.items():
-                if key in subtree:
-                    if isinstance(value, dict) and isinstance(subtree[key], dict):
-                        self.update(value, *keys, key)
-                    else:
-                        self.set(value, *keys, key)
-                else:
-                    self.set(value, *keys, key)
-        else:
-            keys_str=["'"+str(k)+"'" for k in keys]
-            raise ValueError(f"Cannot update tree element {keys} because it is not a dictionary. Use set(update_dict, {','.join(keys_str)}) instead.")
-
+        subtree=TreeNode.from_leafdict(config_dict)
+        self.options.get(*keys).children=subtree.children
+        subtree_accessed=subtree.copy()
+        subtree_accessed.set_all(True)
+        self.accessed.get(*keys).children=subtree_accessed.children
     
     def _reset_access(self):
         """Reset the accessed status of all parameters."""
-        self.accessed=None
+        self.accessed.set_all(False)
     
-    def _get_accessed(self, *keys):
-        """Get the accessed subtree of a parameter."""
-        if len(keys)==0:
-            return self.accessed
-        return self._get_accessed(*keys[:-1])[keys[-1]]
+    # def _get_accessed(self, *keys):
+    #     """Get the accessed subtree of a parameter."""
+    #     if len(keys)==0:
+    #         return self.accessed
+    #     print("here")
+    #     print(keys)
+    #     print(self._get_accessed(*keys[:-1]))
+    #     print(self._get_accessed(*keys[:-1])[keys[-1]])
+    #     return self._get_accessed(*keys[:-1])[keys[-1]]
     
     def is_accessed(self, *keys):
         """Get the accessed status of a parameter."""
-        if len(keys)==0:
-            return self.accessed is not None
-        return self.is_accessed(*keys[:-1]) and keys[-1] in self._get_accessed(*keys[:-1])
+        return self.accessed.get(*keys).value
     
     def set_accessed(self, *keys):
         """Mark a parameter as accessed."""
-        if len(keys)>0:
-            accessed_parent=self._get_accessed(*keys[:-1])
-            if keys[-1] not in accessed_parent:
-                accessed_parent[keys[-1]]={}
-        else:
-            if self.accessed is None:
-                self.accessed={}
+        self.accessed.set_all(True, *keys)
 
     def get_accessed_options(self, *keys):
         """Get only the accessed parameters of a given subtree."""
-        if not self.is_accessed(*keys):
+        accessed_state=self.accessed.get(*keys).filter_any()
+        if accessed_state is None:
             return None
+        accessed_options=self.options.get(*keys)
+        accessed_options=accessed_options.select(accessed_state)
+        return accessed_options.to_leafdict()
 
-        options=self._get(*keys)
-        if not isinstance(options, dict):
-                return options
-        else:
-            result={}
-            for opt in options:
-                child=self.get_accessed_options(*keys, opt)
-                if child is not None:
-                    result[opt]=child
-            return result
     
-    def _find_depth_first(self, key, path=None):
-        if path is None:
-            path=[]
-        subtree=self._get(*path)
-        if isinstance(subtree, dict):
-            for k, v in subtree.items():
-                if k == key:
-                    return path + [k]
-                if isinstance(v, dict):
-                    result = self._find_depth_first(key, path + [k])
-                    if result is not None:
-                        return result
-        return None
+    # def _find_depth_first(self, key, path=None):
+    #     if path is None:
+    #         path=[]
+    #     subtree=self._get(*path)
+    #     if isinstance(subtree, dict):
+    #         for k, v in subtree.items():
+    #             if k == key:
+    #                 return path + [k]
+    #             if isinstance(v, dict):
+    #                 result = self._find_depth_first(key, path + [k])
+    #                 if result is not None:
+    #                     return result
+    #     return None
     
-    def _match_depth_first(self, *keys, subtree=None):
-        """Find the first matching path to a parameter or subtree in the config dictionary.
-
-        Parameters
-        ----------
-        *keys: str
-            Keys matching the path to the parameter or subtree, in the order they appear in the path.
-            For example, the keys (b,d) will match the paths a/b/c/d as well as a/b/d.
-        subtree : dict, optional
-            The subtree in which to search, by default None
-
-        Returns
-        -------
-        list
-            list of keys leading to the first matching parameter or subtree.
-        """
-        if len(keys)==0:
-            return []
-        if subtree is None:
-            subtree=self.options
-
-        if isinstance(subtree, dict):
-            key=keys[0]
-            for k,v in subtree.items():
-                result=None
-                if k==key:
-                    result=self._match_depth_first(*keys[1:], subtree=v)
-                elif isinstance(v, dict):
-                    result=self._match_depth_first(*keys, subtree=v)
-
-                if result is not None:
-                    return [k]+result
-        return None
     
     def __getitem__(self, keys):
         """Get the first matching parameter or subtree in the config dictionary.
@@ -211,10 +157,11 @@ class Logger(object):
         """
         if not isinstance(keys, tuple):
             keys=(keys,)
-        path=self._match_depth_first(*keys)
-        if path is None:
+        result=self.options.match_depth_first(*keys)
+        if result is None:
             raise KeyError(f"No matches for {keys} found.")
-        return self.get(*path)
+        self.accessed.match_depth_first(*keys).set_all(True)
+        return result.to_leafdict()
 
     def __setitem__(self, keys, value):
         """Set the first matching parameter or subtree in the config dictionary.
@@ -228,10 +175,10 @@ class Logger(object):
         """
         if not isinstance(keys, tuple):
             keys=(keys,)
-        path=self._match_depth_first(*keys)
-        if path is None:
+        result=self.options.match_depth_first(*keys)
+        if result is None:
             raise KeyError(f"No matches for {keys} found.")
-        self.set(value,*path)
+        result.value=value
 
     def convert_type(self, dtype, *keys):
         """
@@ -252,12 +199,9 @@ class Logger(object):
             conversion_func=lambda val: val.lower() in ("true", "yes", "1", "t")
         else:
             conversion_func=dtype
-        option=self.get(*keys)
-        if isinstance(option, dict):
-            for key in option:
-                self.convert_type(dtype, *keys, key)
-        else:
-            self.set(conversion_func(option),*keys)
+        conversion_func_none=lambda val: conversion_func(val) if val is not None else None #non-leaf nodes always have value None
+        print(self.options.get(*keys))
+        self.options.get(*keys).map(conversion_func_none)
 
     def convert_array(self, dtype, *keys, sep=",", removeSpaces=False):
         """
@@ -277,19 +221,19 @@ class Logger(object):
         removeSpaces : bool, optional
             Remove spaces in the elements when converting to string array. (default: False)
         """
-        option=self.get(*keys)
-        if isinstance(option, dict):
-            for key in option:
-                self.convert_array(dtype, *keys, key, sep=sep, removeSpaces=removeSpaces)
-        elif isinstance(option, str):
-            array=option.split(sep)
-            if removeSpaces:
-                array=[x.strip() for x in array]
-            array=[a for a in array if a]
-            array=[dtype(a) for a in array]
-            self.set(array, *keys)
-        else:
-            raise ValueError(f"Option {keys} is not a string.")
+        def convert_array_none(val):
+            if val is None:
+                return None
+            elif isinstance(val, str):
+                array=val.split(sep)
+                if removeSpaces:
+                    array=[x.strip() for x in array]
+                array=[a for a in array if a]
+                array=[dtype(a) for a in array]
+                return array
+            else:
+                raise ValueError(f"Option {val} is not a string. Cannot convert to array.")
+        self.options.get(*keys).map(convert_array_none)
     
 
     def add_outfile(self, output_files):
@@ -370,7 +314,7 @@ class Logger(object):
         if accessed_only:
             log_options_dict=self.get_accessed_options()
         else:
-            log_options_dict=self.options
+            log_options_dict=self.options.to_leafdict()
         log_options_str=json.dumps(log_options_dict, indent=4, default=str)       
         log+=["#" + line for line in log_options_str.split("\n")]
         if len(self.outfilenames)>0:
@@ -423,7 +367,7 @@ class Logger(object):
         if accessed_only:
             log["options"]=self.get_accessed_options()
         else:
-            log["options"]=self.options
+            log["options"]=self.options.to_leafdict()
         log["output_files"]=[{"path": str(path), "hash": self.hash_file(path)} for path in self.outfilenames]
         return log
 
