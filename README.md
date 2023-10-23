@@ -106,7 +106,7 @@ config=inlog.Logger(dictionary,version='1.0')
 
 
 ### Accessing Parameters
-`inlog` stores all parameters in a (nested) dictionary. You can access them using the `.get()` method. Doing it this way allows `inlog` to keep track which options you used in your program and to write only those in the log file. Take the yaml example from above:
+`inlog` stores all parameters in a tree data structure. You can access them using the `.get()` method. This allows `inlog` to keep track which options you used in your program and to write only those in the log file. Take the yaml example from above:
 ```python
 import inlog
 config=inlog.load_yaml('config.yaml',version='1.0')
@@ -116,7 +116,13 @@ Similarly, use `.set()` to set a value to a parameter:
 ```python
 config.set('~/MyDocs', 'Filepaths', 'User', 'documents')
 ```
-As a shortcut, you can use bracket notation []:
+You can change all the parameters in a subtree using `set_subtree(subtree_dict)`, using a nested dictionary as argument.
+```python
+config.set_subtree({'documents':'~/MyDocs', 'pictures':'~/MyPictures'}, 'Filepaths', 'User')
+```
+
+
+As a shortcut for accessing parameters, you can use bracket notation []:
 ```python
 config['Filepaths', 'User', 'documents']
 ```
