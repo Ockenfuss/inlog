@@ -16,7 +16,6 @@ class TestTree(ut.TestCase):
     def test_from_dict(self):
         d={"a":1, "b":{"c":2}}
         tree=TreeNode.from_leafdict(d)
-        print(tree)
         self.assertEqual(len(tree.children),2)
         self.assertEqual(len(tree.children["b"].children),1)
         self.assertEqual(tree.get("a").value,1)
@@ -57,7 +56,6 @@ class TestTree(ut.TestCase):
     
     def test_map(self):
         tree=TreeNode.from_leafdict({"a1": {"b1": {"c": 1}, "b2": 1}, "a2": 1}, other=0)
-        print(tree)
         tree.map(lambda x: x+1)
         self.assertEqual(tree.get("a1", "b1", "c").value, 2)
         self.assertEqual(tree.get("a1", "b2").value, 2)

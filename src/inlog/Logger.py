@@ -200,7 +200,6 @@ class Logger(object):
         else:
             conversion_func=dtype
         conversion_func_none=lambda val: conversion_func(val) if val is not None else None #non-leaf nodes always have value None
-        print(self.options.get(*keys))
         self.options.get(*keys).map(conversion_func_none)
 
     def convert_array(self, dtype, *keys, sep=",", removeSpaces=False):
