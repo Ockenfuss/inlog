@@ -25,6 +25,8 @@ def make_nodes(jlog, filename, result):
     self_hash=_hash_name(filename)
     filename=Path(filename).name
     result.append(f"    id_{self_hash}[{filename}]")
+    if set(['text'])==set(jlog.keys()): #legacy: text based logs are included in json logs as "text"
+        return #no further evaluation of text based logs possible
     if "dependencies" in jlog and len(jlog["dependencies"])>0:
         for name, dep in jlog["dependencies"].items():
             dep_hash=_hash_name(name)
