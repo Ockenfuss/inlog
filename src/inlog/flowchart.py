@@ -49,7 +49,7 @@ def main():
     mermaid_code=["flowchart TD"]
     # make_nodes_noloop(jlog, args.jlog, 1)
     make_nodes(jlog, args.jlog, mermaid_code)
-    result=list(dict.fromkeys(mermaid_code)) #remove duplicates
+    mermaid_code=list(dict.fromkeys(mermaid_code)) #remove duplicates
     print("\n".join(mermaid_code))
 
 if __name__ == "__main__":
