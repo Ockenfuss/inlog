@@ -1,4 +1,11 @@
 # What's New
+## 2.1.2
+Bugfix: Support json logs which have text log dependencies for flowchart generation
+Bugfix: Removing duplicate lines not working in flowchart generation
+
+## 2.1.1
+Bugfix: Remove three debug print statements
+
 ## 2.1.0
 Big refactor: Separate all tree logic from the Logger class into a separate tree class
 
