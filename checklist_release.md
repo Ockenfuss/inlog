@@ -5,6 +5,9 @@
 python3 -m unittest discover -s tests/unit
 ```
 
+- Check also the creation of the examples in the corresponding folder
+- Check inlog-flowchart on the examples
+
 - Bump versions in `pyproject.toml` and `__init__.py`
 
 Release
