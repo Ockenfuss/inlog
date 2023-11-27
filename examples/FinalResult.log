@@ -1,9 +1,12 @@
 {
-    "date": "2023-10-08 20:59:51.019125",
+    "date": "2023-11-27 19:38:15.934971",
     "program": "~/inlog/examples/Script2.py",
+    "arguments": [
+        "Config2.yaml"
+    ],
     "version": "1.0",
-    "input": "Config2.ini",
-    "runtime": "0:00:00.006449",
+    "input": "Config2.yaml",
+    "runtime": "0:00:00.005946",
     "options": {
         "section1": {
             "factor": 2,
@@ -19,11 +22,14 @@
     ],
     "dependencies": {
         "~/inlog/examples/intermediateResult.log": {
-            "date": "2023-10-08 20:59:49.026310",
+            "date": "2023-11-27 19:37:25.385796",
             "program": "~/inlog/examples/Script1.py",
+            "arguments": [
+                "Config1.yaml"
+            ],
             "version": "1.0",
-            "input": "Config1.ini",
-            "runtime": "0:00:00.005438",
+            "input": "Config1.yaml",
+            "runtime": "0:00:00.003598",
             "options": {
                 "section1": {
                     "start": 1,
