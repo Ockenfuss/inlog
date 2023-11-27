@@ -1,4 +1,7 @@
 # What's New
+## 2.1.3
+Bugfix: CLI arguments not logged in json version of the log.
+
 ## 2.1.2
 Bugfix: Support json logs which have text log dependencies for flowchart generation
 Bugfix: Removing duplicate lines not working in flowchart generation

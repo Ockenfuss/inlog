@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "inlog"
-version = "2.1.2"
+version = "2.1.3"
 description = "Keep track of your data! Reading config files and creating comprehensive logs for your results."
 readme = "README.md"
 authors = [{ name = "Paul Ockenfuß", email = "paul.ockenfuss@physik.uni-muenchen.de" }]
