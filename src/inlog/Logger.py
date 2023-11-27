@@ -360,6 +360,7 @@ class Logger(object):
         log={}
         log["date"]=str(datetime.datetime.now())
         log["program"]=__main__.__file__
+        log["arguments"]=sys.argv[1:]
         log["version"]=self.version
         log["input"]=str(self.filename)
         log["runtime"]=str(datetime.datetime.now()-self.creation_date)
