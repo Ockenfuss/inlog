@@ -36,8 +36,10 @@ def load_ini(ini_file, version, def_opts=None):
     """
     config = configparser.ConfigParser()
     config._interpolation = configparser.ExtendedInterpolation()
-    try: #ini_file is a string of path
+    try: #ini_file is a string or path
         p=Path(ini_file)
+        if not p.exists(): #since configparser does not raise an error if the file does not exist
+            raise FileNotFoundError("File not found: "+str(p))
         config.read(p)
     except TypeError:
         config.read_file(ini_file) #ini_file is a file-like object
