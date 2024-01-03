@@ -1,4 +1,7 @@
 # What's New
+## 2.1.4
+Raise an error in `load_ini` if file does not exist.
+
 ## 2.1.3
 Bugfix: CLI arguments not logged in json version of the log.
 
