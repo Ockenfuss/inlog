@@ -152,7 +152,7 @@ config.add_outfile('Results2.txt')
 
 ### Writing Logs
 In order to write a log, you need to specify the file path (or multiple paths) of the new log. Optionally, you can specify existing log files, which will be included in the new log as dependencies. There are two different formats for logs: txt and json.
-By default, `write_log()` will replace the file extension of all given filenames with `.log`.
+By default, `write_log()` will append the filename of all given filenames with `.log`.
 ```python
 config.write_log('Results1.txt', old_logs=['Dependency1.txt'])
 ```
@@ -181,7 +181,7 @@ Example:
         }
     ],
     "dependencies": {
-        "inlog/examples/intermediateResult.log": {
+        "inlog/examples/intermediateResult.dat.log": {
             "date": "2023-10-08 20:59:49.026310",
             "program": "inlog/examples/Script1.py",
             "version": "1.0",
@@ -231,7 +231,7 @@ python3 Script1.py Config1.ini
 #Output files created:
 # <PATH> inlog/examples/intermediateResult.dat
 # <HASH> 22a23bcb0798a2b67902a51faad1d04fca6489abdc7c3f1ced983ac22658a721
-# <Logfile> intermediateResult.log_txt
+# <Logfile> intermediateResult.dat.log_txt
 #=========================================
 cd inlog/examples
 python3 Script2.py Config2.ini
@@ -262,7 +262,7 @@ print(config)
 config.show_data()
 ```
 ### Flowchart
-Calling `inlog-flowchart logfile.log` will convert a log "logfile.log" in json format to a Mermaid flowchart. Mermaid is a charting application, based on a markdown like syntax. You can paste the output of flowchart.py in the [Mermaid Live Editor](https://mermaid.live/) to obtain a flowchart.
+Calling `inlog-flowchart logfile.dat.log` will convert a log "logfile.dat.log" in json format to a Mermaid flowchart. Mermaid is a charting application, based on a markdown like syntax. You can paste the output of flowchart.py in the [Mermaid Live Editor](https://mermaid.live/) to obtain a flowchart.
 Just call:
 ```bash
 inlog/flowchart.py examples/FinalResult.log
@@ -278,5 +278,12 @@ flowchart TD
 
 ```
 Pasting into the [Mermaid Live Editor](https://mermaid.live/) will give the following chart:
-![Mermaid Flowchart of Data3.log](examples/Flowchart_FinalResult.svg)
+```mermaid
+flowchart TD
+    id_435d36b4a8d3c591b456a027fe49efa3[FinalResult.log]
+    id_89f9132e25d1cada0f37669c8e3a2faa[intermediateResult.log]
+    id_f1add11e031d031e9f8694f5591c1fc2[No Dependencies]
+    id_f1add11e031d031e9f8694f5591c1fc2 --> |Script1.py| id_89f9132e25d1cada0f37669c8e3a2faa
+    id_89f9132e25d1cada0f37669c8e3a2faa --> |Script2.py| id_435d36b4a8d3c591b456a027fe49efa3
+```
 
