@@ -4,6 +4,7 @@
 - Run all tests! Use python from the command line to ensure no unnecessary print output remains!
 ```bash
 python3 -m unittest discover -s tests/unit
+python3 -m unittest discover -s tests/integration
 ```
 
 - Check also the creation of the examples in the corresponding folder
