@@ -1,4 +1,11 @@
 # What's New
+## 2.2.0
+Logfile names have a naming convention. Instead of replacing the file suffix with `.log`, the suffix is appended by default now.
+To get back the old behaviour, use the new argument `ext_modification_mode='replace'` in `write_log()`.
+
+### Deprecations
+To allow for backward compatibility, when specifying filenames via `write_log(old_logs=...)` and no old log in the new format (extension appended) is found, we search for the file in the old format (extension replaced). If a file is found, this file is used and a deprecation warning is raised.
+
 ## 2.1.4
 Raise an error in `load_ini` if file does not exist.
 
