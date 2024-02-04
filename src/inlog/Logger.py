@@ -410,7 +410,25 @@ class Logger(object):
             with open(new, "w") as newfile:
                 json.dump(log_json, newfile, indent=4, default=str)
 
-    def write_log(self, new_logs, old_logs=None, file_ext='log', format='json', accessed_only=True):
+    @classmethod
+    def _get_logfile_name(cls, file, file_ext, ext_modification_mode):
+        if file is None:
+            return []
+        if isinstance(file, str) or isinstance(file, Path):
+            file=[file]
+        file=[Path(p) for p in file]
+        if file_ext!=None:
+            file_ext="."+file_ext.lstrip(".")
+            if ext_modification_mode=='replace':
+                file=[logfile.with_suffix(file_ext) for logfile in file]
+            elif ext_modification_mode=='append':
+                file=[logfile.with_suffix(logfile.suffix+file_ext) for logfile in file]
+            else:
+                raise ValueError(f"Unknown value for 'ext_modification_mode': {ext_modification_mode}")
+        return file
+
+
+    def write_log(self, new_logs, old_logs=None, file_ext='log', ext_modification_mode='append', format='json', accessed_only=True):
         """
         Write log to files.
 
@@ -423,24 +441,24 @@ class Logger(object):
         old_logs : str or Path or iterable of str, Path, optional
             Existing logfiles, listed as dependencies in the new logfiles. (default: None)
         file_ext : str, optional
-            If set, the file extensions in the provided logfile locations are replaced by 'file_ext' before the function is executed. (default: 'log')
+            If set, the file extensions of the provided paths are modified to 'file_ext' before the function is executed. (default: 'log')
+        ext_modification_mode : str, optional
+            How to modify the file extension. Can be 'replace' or 'append'. Only used if 'file_ext' is set. (default: 'append')
         format : str, optional
             Format of the new logfiles. Can be 'json' or 'txt'. (default: 'json')
         accessed_only : bool, optional
             If True, only the options that were accessed are written to the log. (default: True)
         """
-        if isinstance(new_logs, str) or isinstance(new_logs, Path):
-            new_logs=[new_logs]
-        if old_logs is None:
-            old_logs=[]
-        elif isinstance(old_logs, str) or isinstance(old_logs, Path):
-            old_logs=[old_logs]
-        old_logs=[Path(p) for p in old_logs]
-        new_logs=[Path(p) for p in new_logs]
-        if file_ext!=None:
-            file_ext=file_ext.strip(".")
-            old_logs=[logfile.with_suffix("."+file_ext) for logfile in old_logs]
-            new_logs=[logfile.with_suffix("."+file_ext) for logfile in new_logs]
+        new_logs=self._get_logfile_name(new_logs, file_ext, ext_modification_mode)
+        old_logs=self._get_logfile_name(old_logs, file_ext, ext_modification_mode)
+        for i,f in enumerate(old_logs):
+            if not f.exists():
+                old_format=self._get_logfile_name(f.with_suffix(""), file_ext, 'replace')[0]
+                if old_format.exists():
+                    #Deprecation Warning
+                    warnings.warn(f"Logfile {f} does not exist, but {old_format} was found. Will be using this instead. In inlog 2.2.0, the default behaviour changed from replacing file extensions to appending them. To get back the old behaviour, set ext_modification_mode='replace' in write_log().", DeprecationWarning)
+                    old_logs[i]=old_format
+                    
         if format=='json':
             self._write_log_json(new_logs, old_logs, accessed_only)
         elif format=='txt':

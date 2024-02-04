@@ -1,5 +1,6 @@
 import unittest as ut
 from inlog.Logger import Logger
+from pathlib import Path
 
 class TestLogger(ut.TestCase):
     def setUp(self):
@@ -162,9 +163,67 @@ class TestLogger(ut.TestCase):
         logger=Logger({"section1": {"name": "1"}}, "1.0", def_opts={"section1": {"name": "2", "age": "3"}})
         self.assertEqual(logger.get("section1", "name"), "1")
         self.assertEqual(logger.get("section1", "age"), "3")
+    
+    def test_get_logfile_name(self):
+        # Replace
+        file = "/path/to/file.txt"
+        file_ext = ".log"
+        change_ext = "replace"
+        expected_result = [Path("/path/to/file.log")]
+        result = Logger._get_logfile_name(file, file_ext, change_ext)
+        self.assertEqual(result, expected_result)
 
+        #Append
+        file_ext = "log"
+        change_ext = "append"
+        expected_result = [Path("/path/to/file.txt.log")]
+        result = Logger._get_logfile_name(file, file_ext, change_ext)
+        self.assertEqual(result, expected_result)
 
+        #no existing extension
+        file = "/path/to/file"
+        file_ext = "log"
+        change_ext = "append"
+        expected_result = [Path("/path/to/file.log")]
+        result = Logger._get_logfile_name(file, file_ext, change_ext)
+        self.assertEqual(result, expected_result)
 
+        # no extension
+        file = "/path/to/file.txt"
+        file_ext = None
+        change_ext = "append"
+        expected_result = [Path("/path/to/file.txt")]
+        result = Logger._get_logfile_name(file, file_ext, change_ext)
+        self.assertEqual(result, expected_result)
+
+        # no file
+        file = None
+        expected_result = []
+        result = Logger._get_logfile_name(file, file_ext, change_ext)
+        self.assertEqual(result, expected_result)
+
+        # Test with multiple files
+        files = ["/path/to/file1.csv", "/path/to/file2.txt"]
+        file_ext = ".log"
+        change_ext = "append"
+        expected_result = [Path("/path/to/file1.csv.log"), Path("/path/to/file2.txt.log")]
+        result = Logger._get_logfile_name(files, file_ext, change_ext)
+        self.assertEqual(result, expected_result)
+
+        # Test with Path objects
+        files = [Path("/path/to/file1.csv"), Path("/path/to/file2.txt")]
+        file_ext = "log"
+        change_ext = "replace"
+        expected_result = [Path("/path/to/file1.log"), Path("/path/to/file2.log")]
+        result = Logger._get_logfile_name(files, file_ext, change_ext)
+        self.assertEqual(result, expected_result)
+
+        # Test with invalid change_ext value
+        file = "/path/to/file.txt"
+        file_ext = ".log"
+        change_ext = "invalid"
+        with self.assertRaises(ValueError):
+            Logger._get_logfile_name(file, file_ext, change_ext)
 
 if __name__ == '__main__':
-    unittest.main()
+    ut.main()
