@@ -1,10 +1,9 @@
 # Inlog
 
-Parse config files and keep track of your results by creating logfiles!
-
+Inlog is your solution to managing and tracking results from your Python programs. It simplifies the process of logging parameters and results, making your work more reproducible and organized.
 
 ## Motivation
-Imagine, you have a python program with some parameters. You make a few experiments with it, producing some results. Usually, people write the parameters in the filename:
+Imagine, you have a python program with some parameters. You make a few experiments with it, producing some results. Traditionally, people write the parameters in the filename:
 ```txt
 Result1_day2_3deg_4km.txt
 ```
@@ -14,25 +13,33 @@ There are a few problems with this:
 - The list of parameters is often incomplete.
 - The list of parameters is not machine readable.
 
-`inlog` ("Input Logger") tries to solve those problems by creating a log file with all parameters next to your results.
-Therefore, you need to put your parameters into a separate file, e.g. in yaml or ini format.
-Then, it requires just three additional lines in your python code to create a comprehensive logfile:
+Things are usually fine, until you try to reproduce your results a few months later...
+
+`inlog` ("Input Logger") addresses those problems by creating a log file with all parameters next to your results.
+All you need to do is to put your parameters into a separate file (like YAML or INI format) and with just three additional lines in your python code, inlog will create a comprehensive logfile:
 ```python
 import inlog
 config=inlog.load_yaml('Params.yaml', '1.0')
 #do your stuff, using the parameters in config and save results into 'Results1.txt'
 #...
-config.write_log('Results1.txt') #this will create a file 'Results1.log' in the same folder as 'Results1.txt'
+config.write_log('Results1.txt') #this creates a file 'Results1.log' in the same folder as 'Results1.txt'
 ```
 
-But there is more: `inlog` can store additional information like date, runtime or a [hash of your data](https://github.com/Ockenfuss/inlog#hashes), it can keep track of [complex histories](https://github.com/Ockenfuss/inlog#writing-logs) of your results and it can even visualize them as a [flowchart](https://github.com/Ockenfuss/inlog#flowchart)! To see a more comprehensive example, look at the [examples folder](https://github.com/Ockenfuss/inlog/tree/master/examples)
+But there is more: `inlog` stores additional information like the date, runtime or a [hash of your data](https://github.com/Ockenfuss/inlog#hashes), it can keep track of [complex histories](https://github.com/Ockenfuss/inlog#writing-logs) of your results and it can even visualize them as a [flowchart](https://github.com/Ockenfuss/inlog#flowchart)!
+That`s how, on the long term, inlog helps you to remember:
+
+- Where did my results come from?
+- What do the results depend on?
+- What programs did I execute to get the results?
+
+To see a more comprehensive example, look at the [examples folder](https://github.com/Ockenfuss/inlog/tree/master/examples)
 
 ## Installation
 The basic version of `inlog` only depends on the python standard library.
 ```
 python3 -m pip install inlog
 ```
-If you want Yaml support, install the `extras` version of `inlog`:
+If you want YAML support, install the `extras` version of `inlog`:
 ```
 python3 -m pip install inlog[extras]
 ```
@@ -79,8 +86,8 @@ import inlog
 config=inlog.load_json('config.json',version='1.0')
 ```
 
-#### Yaml Format
-Parsing Yaml files requires the `pyyaml` library.
+#### YAML Format
+Parsing YAML files requires the `pyyaml` library.
 Example of a .yaml file:
 ```ini
 Filepaths:
