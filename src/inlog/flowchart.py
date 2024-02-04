@@ -48,7 +48,9 @@ def main():
     with open(args.jlog, 'r') as f:
         jlog.update(json.load(f))
 
-    mermaid_code=["flowchart TD"]
+    mermaid_code=["%% The following lines are code for the mermaid charting application."]
+    mermaid_code.append("%% Paste them into the mermaid live editor at https://mermaid.live to see the flowchart.")
+    mermaid_code.append("flowchart TD")
     # make_nodes_noloop(jlog, args.jlog, 1)
     make_nodes(jlog, args.jlog, mermaid_code)
     mermaid_code=list(dict.fromkeys(mermaid_code)) #remove duplicates
