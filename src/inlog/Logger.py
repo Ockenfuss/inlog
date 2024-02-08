@@ -287,6 +287,14 @@ class Logger(object):
                 fb = f.read(BLOCK_SIZE) # Read the next block from the file
         return file_hash.hexdigest() # Get the hexadecimal digest of the hash
 
+    def _get_program_file(self):
+        try: #If the program is run from a script
+            return __main__.__file__
+        except AttributeError: 
+            #there might be more options to try
+            #see: https://stackoverflow.com/a/35514032
+            return None
+
     def _create_log_txt(self, accessed_only=False):
         """
         Create a log in text format
@@ -305,7 +313,7 @@ class Logger(object):
         log.append("cd "+os.getcwd())
         log.append("python3 "+" ".join(sys.argv))
         log.append("# <Date> "+str(datetime.datetime.now()))
-        log.append("# <Program> "+__main__.__file__)
+        log.append("# <Program> "+str(self._get_program_file()))
         log.append("# <Version> "+str(self.version))
         log.append("# <Input> "+str(self.filename))
         log.append("# <Runtime> "+str(datetime.datetime.now()-self.creation_date))
@@ -359,7 +367,7 @@ class Logger(object):
         """
         log={}
         log["date"]=str(datetime.datetime.now())
-        log["program"]=__main__.__file__
+        log["program"]=self._get_program_file()
         log["arguments"]=sys.argv[1:]
         log["version"]=self.version
         log["input"]=str(self.filename)
