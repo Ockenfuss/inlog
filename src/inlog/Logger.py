@@ -294,6 +294,30 @@ class Logger(object):
             #there might be more options to try
             #see: https://stackoverflow.com/a/35514032
             return None
+    
+    def _to_string(self, accessed_only=False):
+        lines=[]
+        lines.append("<Date> "+str(datetime.datetime.now()))
+        lines.append("<Program> "+str(self._get_program_file()))
+        lines.append("<Arguments> "+str(sys.argv[1:]))
+        lines.append("<Version> "+str(self.version))
+        lines.append("<Input> "+str(self.filename))
+        lines.append("<Runtime> "+str(datetime.datetime.now()-self.creation_date))
+        lines.append("**************************")
+        if accessed_only:
+            log_options_dict=self.get_accessed_options()
+        else:
+            log_options_dict=self.options.to_leafdict()
+        log_options_str=json.dumps(log_options_dict, indent=4, default=str)       
+        lines+=[line for line in log_options_str.split("\n")]
+        if len(self.outfilenames)>0:
+            lines.append("**************************")
+            lines.append("Output files created:")
+            for path in self.outfilenames:
+                lines.append("<PATH> "+str(path))
+                lines.append("<HASH> "+self.hash_file(path))
+        lines=[l+"\n" for l in lines]
+        return lines
 
     def _create_log_txt(self, accessed_only=False):
         """
@@ -312,25 +336,9 @@ class Logger(object):
         log=[]
         log.append("cd "+os.getcwd())
         log.append("python3 "+" ".join(sys.argv))
-        log.append("# <Date> "+str(datetime.datetime.now()))
-        log.append("# <Program> "+str(self._get_program_file()))
-        log.append("# <Version> "+str(self.version))
-        log.append("# <Input> "+str(self.filename))
-        log.append("# <Runtime> "+str(datetime.datetime.now()-self.creation_date))
-        log.append("#**************************")
-        if accessed_only:
-            log_options_dict=self.get_accessed_options()
-        else:
-            log_options_dict=self.options.to_leafdict()
-        log_options_str=json.dumps(log_options_dict, indent=4, default=str)       
-        log+=["#" + line for line in log_options_str.split("\n")]
-        if len(self.outfilenames)>0:
-            log.append("#**************************")
-            log.append("#Output files created:")
-            for path in self.outfilenames:
-                log.append("# <PATH> "+str(path))
-                log.append("# <HASH> "+self.hash_file(path))
-        log=[l+"\n" for l in log]
+        lines=self._to_string(accessed_only=accessed_only)
+        lines=['#'+line for line in lines]
+        log.extend(lines)
         return log
     
 
@@ -381,11 +389,16 @@ class Logger(object):
 
     def show_data(self):
         """Print log."""
-        print(*self._create_log_txt(accessed_only=False))
+        print(*self._to_string(accessed_only=False))
     
     def __str__(self):
         """Get log as string."""
-        return "".join(self._create_log_txt(accessed_only=False))
+        return "".join(self._to_string(accessed_only=False))
+    
+    def __repr__(self):
+        return "".join(self._to_string(accessed_only=False))
+
+
 
     def _write_log_txt(self, new_logs, old_logs, accessed_only=False):
         old_lines=[]

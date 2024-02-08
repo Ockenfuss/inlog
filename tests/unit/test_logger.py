@@ -140,6 +140,8 @@ class TestLogger(ut.TestCase):
     def test_create_log_txt(self):
         self.logger._reset_access()
         self.logger.get("b", "c")
+        self.assertEqual('cd' , self.logger._create_log_txt()[0][:2])
+        self.assertEqual('python' , self.logger._create_log_txt()[1][:6])
         self.assertIn('#    "a": 1,\n' , self.logger._create_log_txt())
         self.assertNotIn('#    "a": 1,\n' , self.logger._create_log_txt(accessed_only=True))
         self.assertIn('#    "b": {\n' , self.logger._create_log_txt(accessed_only=True))
@@ -148,8 +150,15 @@ class TestLogger(ut.TestCase):
         self.logger._reset_access()
         self.logger.get("b", "c")
         st=str(self.logger)
-        self.assertIn('#    "a": 1,\n' , st)
-        self.assertIn('#    "b": {\n' , st)
+        self.assertIn('    "a": 1,\n' , st)
+        self.assertIn('    "b": {\n' , st)
+    
+    def test_repr(self):
+        self.logger._reset_access()
+        self.logger.get("b", "c")
+        st=repr(self.logger)
+        self.assertIn('    "a": 1,\n' , st)
+        self.assertIn('    "b": {\n' , st)
     
     def test_create_multiple(self):
         """Test that multiple independent logger objects can be created in the same script."""
