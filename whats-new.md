@@ -1,4 +1,9 @@
 # What's New
+## 2.2.1
+Add `repr` representation of Logger object.
+Bugfix:
+- If `__main__.__file__` is not set (e.g. in interactive sessions), the log file could not be created.
+
 ## 2.2.0
 Logfile names have a naming convention. Instead of replacing the file suffix with `.log`, the suffix is appended by default now.
 To get back the old behaviour, use the new argument `ext_modification_mode='replace'` in `write_log()`.
