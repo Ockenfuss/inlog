@@ -1,4 +1,7 @@
 # What's New
+## 2.2.2
+Make the version and config_dict parameters optional when creating a Logger object.
+
 ## 2.2.1
 Add `repr` representation of Logger object.
 Bugfix:
