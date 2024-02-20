@@ -17,14 +17,14 @@ def _configparser_to_dict(configparser):
                 options[sec][key]=configparser[sec][key]
         return options
 
-def load_ini(ini_file, version, def_opts=None):
+def load_ini(ini_file, version=None, def_opts=None):
     """Create a logger object from an ini file
 
     Parameters
     ----------
     ini_file : str, path-like or file-like
         Path to the ini file or file-like object
-    version : str
+    version : object, optional
         Version of your program
     def_opts : dict, optional
         Default parameters, used as a fallback if not present in the config file. by default None
@@ -48,14 +48,14 @@ def load_ini(ini_file, version, def_opts=None):
     logger.filename=ini_file
     return logger
 
-def load_yaml(yaml_file, version, def_opts=None):
+def load_yaml(yaml_file, version=None, def_opts=None):
     """Create a logger object from a yaml file
 
     Parameters
     ----------
     yaml_file : str, path-like or file-like
         Path to the yaml file or file-like object
-    version : str
+    version : object, optional
         Version of your program
     def_opts : dict, optional
         Default parameters, used as a fallback if not present in the config file. by default None
@@ -77,14 +77,14 @@ def load_yaml(yaml_file, version, def_opts=None):
     logger.filename=yaml_file
     return logger
 
-def load_json(json_file, version, def_opts=None):
+def load_json(json_file, version=None, def_opts=None):
     """Create a logger object from a json file
 
     Parameters
     ----------
     json_file : str, path-like or file-like
         Path to the json file or file-like object
-    version : str
+    version : object, optional
         Version of your program
     def_opts : dict, optional
         Default parameters, used as a fallback if not present in the config file. by default None

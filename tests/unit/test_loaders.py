@@ -32,7 +32,7 @@ class TestLogger(ut.TestCase):
         self.assertRaises(FileNotFoundError, inlog.load_yaml, "does/not/exist.ini", "1.0")
     
     def test_load_json(self):
-        f_json=StringIO("""
+        json_string="""
                 {
                     "section1": {
                         "start": 1,
@@ -42,12 +42,16 @@ class TestLogger(ut.TestCase):
                         "foo": 2
                     }
                 }
-                """)
+                """
+        f_json=StringIO(json_string)
         logger=inlog.load_json(f_json, "1.0")
         self.assertEqual(logger.get("section1", "start"), 1)
         self.assertEqual(logger.get("section1", "intermediate"), "abc.dat")
         self.assertEqual(logger.get("section2", "foo"), 2)
         self.assertRaises(FileNotFoundError, inlog.load_json, "does/not/exist.ini", "1.0")
+        f_json=StringIO(json_string)
+        logger=inlog.load_json(f_json)
+        self.assertEqual(logger.version, None)
     
     def test_default_ini(self):
         """Test that default values are used if not present in the config file"""

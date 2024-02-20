@@ -9,11 +9,20 @@ class TestLogger(ut.TestCase):
         return Logger({"a":1, "b": {"c": 2, "d": 3.0}, "e": {"f": "4.0", "g": "4.0, 5.0,6.0,"}}
 , "1.0")
 
+    def test_init(self):
+        logger=Logger()
+        self.assertEqual(logger.version, None)
+        self.assertEqual(logger.get(), None)
+        logger=Logger(version=True) #can contain any object
+        self.assertTrue(logger.version)
+
     def test_get(self):
         self.assertEqual(self.logger._get("a"),1)
         self.assertEqual(self.logger._get("b", "c"),2)
         self.assertIsInstance(self.logger._get(), dict)
         self.assertIsInstance(self.logger._get("b"), dict)
+        self.assertRaises(KeyError, self.logger._get, "f")
+        self.assertRaises(KeyError, self.logger._get, "b", "e")
     
     def test_set(self):
         logger=self.get_test_logger()
@@ -35,17 +44,18 @@ class TestLogger(ut.TestCase):
     
     
     def test_get_item(self):
-        logger=Logger({"a": 1, "b": {"c": {"b":2}}, "c": {"b": 3}}, "1.0")
+        logger=Logger({"a": 1, "b": {"c": {"b":2}}, "c": {"b": 3}})
         self.assertEqual(logger["a"],1)
         self.assertEqual(logger["b"],{"c": {"b":2}})
         self.assertEqual(logger["c"],{"b":2})
         self.assertEqual(logger["b","c"],{"b":2})
         self.assertEqual(logger["c","b"],2)
         self.assertEqual(logger["b","b"],2)
+        self.assertRaises(KeyError,logger.__getitem__, ("d"))
         self.assertRaises(KeyError,logger.__getitem__, ("a","b"))
 
     def test_set_item(self):
-        logger=Logger({"a": 1, "b": {"c": {"b":2}}, "c": {"b": 3}}, "1.0")
+        logger=Logger({"a": 1, "b": {"c": {"b":2}}, "c": {"b": 3}})
         logger["a"]=5
         self.assertFalse(logger.is_accessed("a"))
         self.assertEqual(logger["a"],5)

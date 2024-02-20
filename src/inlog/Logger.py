@@ -13,7 +13,7 @@ from inlog.Tree import TreeNode
 class Logger(object):
     """Parser to read inputfiles and create logs."""
 
-    def __init__(self, config_dict, version, def_opts=None):
+    def __init__(self, config_dict=None, version=None, def_opts=None):
         """
         Create Logger for config parsing and logging.
 
@@ -33,7 +33,9 @@ class Logger(object):
         self.version=version
         self.creation_date=datetime.datetime.now()
         self.outfilenames=[]
-        
+
+        if config_dict is None:
+            config_dict={} 
         if def_opts is None:
             def_opts={}
         self.options=TreeNode.from_leafdict(def_opts)
