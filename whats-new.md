@@ -1,4 +1,7 @@
 # What's New
+## 2.2.3
+When creating flowcharts, no-dependency nodes are now program specific.
+
 ## 2.2.2
 Make the version and config_dict parameters optional when creating a Logger object.
 
