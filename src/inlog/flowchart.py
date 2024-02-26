@@ -34,7 +34,7 @@ def make_nodes(jlog, filename, result):
             progamname=Path(jlog["program"]).name
             result.append(f"    id_{dep_hash} --> |{progamname}| id_{self_hash}")
     else: #no dependencies: create a unique dummy node "No Dependencies"
-        dep_hash=_hash_name(str(random.random()))
+        dep_hash=_hash_name(jlog["program"]) #every call of this program depends on the same 'no-dependency' node
         result.append(f"    id_{dep_hash}[No Dependencies]")
         progamname=Path(jlog["program"]).name
         result.append(f"    id_{dep_hash} --> |{progamname}| id_{self_hash}")
